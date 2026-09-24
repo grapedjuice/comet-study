@@ -27,7 +27,9 @@ Planning points are not money or tokens. Tranche cap 100; feature cutoff 75; res
 
 | V2 | Integrated foundation verification | unknown lead, conservative Astra weight | 8 | 1 | Accepted: static, PostgreSQL, build, browser, accessibility, security and audit checks recorded |
 
-Spent 62; remaining 38, of which 25 is reserved for final verification/checkpoint work. At the feature cutoff, no new product module is launched. The repository is resumable from this checkpoint. No accepted student-facing product module exists yet; foundation gates pass. Lead exact ID unavailable, so conservative Astra-weight accounting is an estimate, not a claim of model identity or price. User asked to keep working while preview is open; the dev preview remains on port 3000.
+| A1 | Auth policy and transactional persistence | unknown lead, conservative Astra weight | 6 | 1 | Partial auth slice accepted; 24 unit and 8 integration tests green |
+
+Spent 68; remaining 32, of which 25 is reserved for final verification/checkpoint work. At the feature cutoff, no broad new product module is launched. The repository is resumable from this checkpoint. The auth persistence slice is accepted only for its tested invariants; no student-facing auth flow is complete. Lead exact ID unavailable, so conservative Astra-weight accounting is an estimate, not a claim of model identity or price. User asked to keep working while preview is open; the dev preview remains on port 3000.
 
 ## Verification evidence — 2026-09-23
 
@@ -37,8 +39,8 @@ Spent 62; remaining 38, of which 25 is reserved for final verification/checkpoin
 | `npm run lint` | PASS |
 | `npm run typecheck` | PASS |
 | `npm run api:check` | PASS |
-| `npm run test:unit` | PASS — 15/15 |
-| `npm run test:integration` | PASS — 5/5 against isolated PostgreSQL 18.4 |
+| `npm run test:unit` | PASS — 24/24 |
+| `npm run test:integration` | PASS — 8/8 against isolated PostgreSQL 18.4 |
 | `npm run build` | PASS — Next.js 16.3.6 |
 | `npm run test:e2e` | PASS — 12/12, desktop and mobile |
 | `npm run test:a11y` | PASS — 2/2 |
@@ -47,14 +49,14 @@ Spent 62; remaining 38, of which 25 is reserved for final verification/checkpoin
 
 ## Checkpoint blockers
 
-Authentication, onboarding, academic sync, groups, matching, scheduling, rooms, resources, exams, notifications, moderation, full PostgreSQL product schema, endpoint families, OpenAPI coverage beyond health, and deployment remain unimplemented. Nebula live access is blocked pending rotation of the previously exposed key and secure injection of a replacement; no key was read or tested. SSO, email, push, storage/scanning, LibCal and deployment credentials/partnerships were not supplied. The dev preview is a truthful landing/status page, not a working student application.
+Auth HTTP routes/cookies/email delivery/onboarding/profile, academic sync, groups, matching, scheduling, rooms, resources, exams, notifications, moderation, full PostgreSQL product schema, endpoint families, OpenAPI coverage beyond health, and deployment remain unimplemented. Nebula live access is blocked pending rotation of the exposed key and secure injection of a replacement; no key was read or tested. SSO, email, push, storage/scanning, LibCal and deployment credentials/partnerships were not supplied. The dev preview is a truthful landing/status page, not a working student application.
 
 ## Requirements map
 
 | ID | Specification | Owner/path | Status/evidence |
 |---|---|---|---|
 | FND | 2, 5 health, 8.1.1, 8.5, 9 | Foundation: lib/db/env/health, scripts, CI | Pending |
-| AUTH | 3.1, 4 identity, 5 auth | Auth: features/auth, onboarding/settings | Pending |
+| AUTH | 3.1, 4 identity, 5 auth | `lib/auth/policy.ts`, `lib/auth/repository.ts`, auth migration | Partial — persistence/token invariants pass; routes, cookies, email delivery, onboarding and profile remain pending |
 | DATA | 3.2, 4 academic, 5 catalog | Integration: features/nebula, jobs | Pending; no live key |
 | GROUP | 3.3–3.4, 5 groups/dashboard | Groups/enrollments/dashboard | Pending |
 | MATCH | 3.5, 6.1–6.2 | Matching/availability | Pending |

@@ -8,6 +8,13 @@
       "when": 1790126663258,
       "tag": "0000_lame_stick",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790214354172,
+      "tag": "0001_mean_tiger_shark",
+      "breakpoints": true
     }
   ]
 }

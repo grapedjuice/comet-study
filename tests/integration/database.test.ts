@@ -16,8 +16,7 @@ if (!url || process.env.COMET_ISOLATED_TEST_DB !== "1") {
 const db = createDatabaseClient(url);
 
 beforeAll(async () => {
-  expect(await isDatabaseReady(db)).toBe(false);
-  await runMigrations(db);
+  if (!(await isDatabaseReady(db))) await runMigrations(db);
   expect(await isDatabaseReady(db)).toBe(true);
 });
 
@@ -31,7 +30,15 @@ describe("migration and readiness on PostgreSQL", () => {
     const count = await db.pool.query(
       "select count(*)::int as n from drizzle.__drizzle_migrations",
     );
-    expect(count.rows[0].n).toBe(1);
+    expect(count.rows[0].n).toBe(2);
+    const tables = await db.pool.query<{ table_name: string }>(
+      "select table_name from information_schema.tables where table_schema = 'public' and table_name in ('users', 'verification_tokens', 'sessions_auth') order by table_name",
+    );
+    expect(tables.rows.map((row) => row.table_name)).toEqual([
+      "sessions_auth",
+      "users",
+      "verification_tokens",
+    ]);
   });
 
   it("marks a stale migration journal unready", async () => {
