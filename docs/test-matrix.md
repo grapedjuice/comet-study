@@ -8,7 +8,8 @@ Status is evidence-based. The two foundation health endpoints are the first impl
 | GET /api/v1/health/ready | real PostgreSQL healthy/missing migration/down | foundation.spec.ts | Pending execution |
 | Landing/404/keyboard/mobile | browser | foundation.spec.ts | Pending execution |
 | POST /api/v1/auth/request-verification | Unit policy + local HTTP smoke | Pending | Implemented; provider-disabled 503 and ineligible 422 verified |
-| Auth verification/session/profile/preferences/availability/export/deletion | Pending | Pending | Not implemented |
+| POST /api/v1/auth/verify-email | Repository integration + local HTTP smoke | Pending | Implemented; invalid-token dependency response verified; valid-cookie flow covered by repository transaction tests |
+| Auth session/profile/preferences/availability/export/deletion | Pending | Pending | Not implemented |
 | Terms/courses/sections/enrollments | Pending | Pending | Not implemented |
 | Dashboard/groups/members/invitations/activity | Pending | Pending | Not implemented |
 | Matches/search/shortlist | Pending | Pending | Not implemented |

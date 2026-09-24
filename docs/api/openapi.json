@@ -5,6 +5,42 @@
     "version": "0.1.0"
   },
   "paths": {
+    "/api/v1/auth/verify-email": {
+      "post": {
+        "operationId": "verifyEmail",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "token"
+                ],
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Email verified and session cookie issued"
+          },
+          "422": {
+            "description": "Malformed, expired, or already used token"
+          },
+          "503": {
+            "description": "Database unavailable"
+          }
+        }
+      }
+    },
     "/api/v1/auth/request-verification": {
       "post": {
         "operationId": "requestVerification",

@@ -14,7 +14,9 @@ The readiness result covers foundation dependencies only. Authentication, Nebula
 
 ## Authentication slice
 
-`POST /api/v1/auth/request-verification` accepts `{ "email": "student@utdallas.edu" }`. It rejects malformed or non-exact `@utdallas.edu` addresses with 422 and returns a safe 503 when the configured email provider or database is unavailable. A 200 response returns `{ "data": { "delivery": "email", "expiresInSeconds": 600 } }`; the raw token is never returned. The repository stores only token hashes and consumes each token once transactionally. Session cookies, verification email adapters, `/verify-email`, sign-out, profile, onboarding and account lifecycle remain pending.
+`POST /api/v1/auth/request-verification` accepts `{ "email": "student@utdallas.edu" }`. It rejects malformed or non-exact `@utdallas.edu` addresses with 422 and returns a safe 503 when the configured email provider or database is unavailable. A 200 response returns `{ "data": { "delivery": "email", "expiresInSeconds": 600 } }`; the raw token is never returned. The repository stores only token hashes and consumes each token once transactionally.
+
+`POST /api/v1/auth/verify-email` accepts `{ "token": "..." }`, atomically consumes a valid unexpired token, marks the user verified, creates a hashed session record, and returns the user ID while setting an HTTP-only `comet_session` cookie. The cookie is `Secure` in production, `SameSite=Lax`, path-scoped to `/`, and expires with the seven-day session. Invalid, expired, or reused tokens return a safe 422; unavailable dependencies return 503. Email adapters, sign-out, profile, onboarding and account lifecycle remain pending.
 
 ## Pending endpoint families
 

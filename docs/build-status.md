@@ -29,9 +29,9 @@ Planning points are not money or tokens. Tranche cap 100; feature cutoff 75; res
 
 | A1 | Auth policy and transactional persistence | unknown lead, conservative Astra weight | 6 | 1 | Partial auth slice accepted; 24 unit and 8 integration tests green |
 
-| A2 | Auth request-verification route and OpenAPI contract | unknown lead, conservative Astra weight | 4 | 1 | Accepted route behavior; provider-disabled state verified over live local server |
+| A2 | Auth request/verify routes and OpenAPI contract | unknown lead, conservative Astra weight | 6 | 1 | Accepted route behavior; provider-disabled and invalid-token states verified over live local server; repository covers valid atomic redemption |
 
-Spent 72; remaining 28, of which 25 is reserved for final verification/checkpoint work. At the feature cutoff, no broad new product module is launched. The repository is resumable from this checkpoint. The auth slice is accepted only for its tested persistence and request-validation behavior; no student-facing sign-in flow is complete. Lead exact ID unavailable, so conservative Astra-weight accounting is an estimate, not a claim of model identity or price. User asked to keep working while preview is open; the dev preview remains on port 3000.
+Spent 74; remaining 26, of which 25 is reserved for final verification/checkpoint work. At the feature cutoff, no broad new product module is launched. The repository is resumable from this checkpoint. The auth slice is accepted only for its tested persistence, request-validation, token-redemption and cookie behavior; no student-facing sign-in flow is complete. Lead exact ID unavailable, so conservative Astra-weight accounting is an estimate, not a claim of model identity or price. User asked to keep working while preview is open; the dev preview remains on port 3000.
 
 ## Verification evidence — 2026-09-23
 
@@ -51,14 +51,14 @@ Spent 72; remaining 28, of which 25 is reserved for final verification/checkpoin
 
 ## Checkpoint blockers
 
-Auth email adapter/cookies/verify/sign-out/onboarding/profile, academic sync, groups, matching, scheduling, rooms, resources, exams, notifications, moderation, full PostgreSQL product schema, endpoint families, and deployment remain unimplemented. Nebula live access is blocked pending rotation of the exposed key and secure injection of a replacement; no key was read or tested. SSO, email, push, storage/scanning, LibCal and deployment credentials/partnerships were not supplied. The dev preview is a truthful landing/status page, not a working student application.
+Auth email adapter/sign-out/onboarding/profile, academic sync, groups, matching, scheduling, rooms, resources, exams, notifications, moderation, full PostgreSQL product schema, endpoint families, and deployment remain unimplemented. Nebula live access is blocked pending rotation of the exposed key and secure injection of a replacement; no key was read or tested. SSO, email, push, storage/scanning, LibCal and deployment credentials/partnerships were not supplied. The dev preview is a truthful landing/status page, not a working student application.
 
 ## Requirements map
 
 | ID | Specification | Owner/path | Status/evidence |
 |---|---|---|---|
 | FND | 2, 5 health, 8.1.1, 8.5, 9 | Foundation: lib/db/env/health, scripts, CI | Pending |
-| AUTH | 3.1, 4 identity, 5 auth | `lib/auth/policy.ts`, `lib/auth/repository.ts`, `lib/auth/service.ts`, request-verification route, auth migration | Partial — request validation and persistence pass; email adapter, cookies, verify/sign-out, onboarding and profile remain pending |
+| AUTH | 3.1, 4 identity, 5 auth | `lib/auth/policy.ts`, `lib/auth/repository.ts`, `lib/auth/service.ts`, auth routes, auth migration | Partial — request/verify validation, atomic redemption, hashed persistence and cookie issuance pass; email adapter, sign-out, onboarding and profile remain pending |
 | DATA | 3.2, 4 academic, 5 catalog | Integration: features/nebula, jobs | Pending; no live key |
 | GROUP | 3.3–3.4, 5 groups/dashboard | Groups/enrollments/dashboard | Pending |
 | MATCH | 3.5, 6.1–6.2 | Matching/availability | Pending |
