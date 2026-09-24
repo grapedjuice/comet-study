@@ -1,0 +1,13 @@
+.next
+node_modules
+package-lock.json
+playwright-report
+test-results
+output
+docs/specification.md
+docs
+README.md
+CODE_OF_CONDUCT.md
+CONTRIBUTING.md
+.github/ISSUE_TEMPLATE
+db/migrations/meta

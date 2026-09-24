@@ -1,0 +1,56 @@
+{
+  "name": "comet-study",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@11.8.0",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "node --env-file-if-exists=.env --import tsx scripts/start.ts",
+    "env:check": "node --env-file-if-exists=.env --import tsx scripts/env-check.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "node --env-file-if-exists=.env --import tsx scripts/migrate.ts",
+    "db:seed": "node --env-file-if-exists=.env --import tsx scripts/seed.ts",
+    "api:generate": "tsx scripts/generate-openapi.ts",
+    "api:check": "tsx scripts/generate-openapi.ts --check",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "tsx scripts/test-with-postgres.ts integration",
+    "test:e2e": "tsx scripts/test-with-postgres.ts e2e",
+    "test:a11y": "tsx scripts/test-with-postgres.ts a11y",
+    "test:security": "tsx scripts/check-committed-secrets.ts && vitest run tests/security && npm audit --omit=dev --audit-level=high",
+    "test": "npm run test:unit && npm run test:integration && npm run test:security && npm run test:e2e && npm run test:a11y",
+    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run api:check && npm run build && npm test"
+  },
+  "dependencies": {
+    "drizzle-orm": "0.45.3",
+    "next": "16.3.6",
+    "pg": "8.16.3",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "@playwright/test": "1.63.0",
+    "@types/node": "24.10.1",
+    "@types/pg": "8.15.6",
+    "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.3",
+    "drizzle-kit": "0.31.11",
+    "embedded-postgres": "18.4.0-beta.17",
+    "eslint": "9.39.1",
+    "eslint-config-next": "16.3.6",
+    "prettier": "3.7.4",
+    "tsx": "4.21.0",
+    "typescript": "6.0.3",
+    "vitest": "5.0.1"
+  }
+}
