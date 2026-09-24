@@ -12,6 +12,10 @@ Success envelope: `{ "data": ... }`, with optional pagination `meta` on growing 
 
 The readiness result covers foundation dependencies only. Authentication, Nebula and other integrations are unimplemented; the endpoint must not be used as evidence of complete-product readiness.
 
+## Authentication slice
+
+`POST /api/v1/auth/request-verification` accepts `{ "email": "student@utdallas.edu" }`. It rejects malformed or non-exact `@utdallas.edu` addresses with 422 and returns a safe 503 when the configured email provider or database is unavailable. A 200 response returns `{ "data": { "delivery": "email", "expiresInSeconds": 600 } }`; the raw token is never returned. The repository stores only token hashes and consumes each token once transactionally. Session cookies, verification email adapters, `/verify-email`, sign-out, profile, onboarding and account lifecycle remain pending.
+
 ## Pending endpoint families
 
 Auth/profile, catalog/enrollments, dashboard/groups/membership, matching, scheduling/votes/RSVP/calendars, rooms, resources, exams, notifications/push, blocking/moderation and operations/jobs. See the preserved specification for exact paths, body schemas, privacy rules and negative-case acceptance checks.

@@ -11,6 +11,29 @@ const document = {
   openapi: "3.1.0",
   info: { title: "Comet Study implemented API", version: "0.1.0" },
   paths: {
+    "/api/v1/auth/request-verification": {
+      post: {
+        operationId: "requestVerification",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                additionalProperties: false,
+                required: ["email"],
+                properties: { email: { type: "string", format: "email" } },
+              },
+            },
+          },
+        },
+        responses: {
+          "200": { description: "Verification delivery queued" },
+          "422": { description: "Malformed or ineligible email" },
+          "503": { description: "Email or database unavailable" },
+        },
+      },
+    },
     "/api/v1/health/live": {
       get: {
         operationId: "getLiveness",

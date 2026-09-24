@@ -7,7 +7,8 @@ Status is evidence-based. The two foundation health endpoints are the first impl
 | GET /api/v1/health/live | foundation worker tests | foundation.spec.ts | Pending execution |
 | GET /api/v1/health/ready | real PostgreSQL healthy/missing migration/down | foundation.spec.ts | Pending execution |
 | Landing/404/keyboard/mobile | browser | foundation.spec.ts | Pending execution |
-| Auth/profile/preferences/availability/export/deletion | Pending | Pending | Not implemented |
+| POST /api/v1/auth/request-verification | Unit policy + local HTTP smoke | Pending | Implemented; provider-disabled 503 and ineligible 422 verified |
+| Auth verification/session/profile/preferences/availability/export/deletion | Pending | Pending | Not implemented |
 | Terms/courses/sections/enrollments | Pending | Pending | Not implemented |
 | Dashboard/groups/members/invitations/activity | Pending | Pending | Not implemented |
 | Matches/search/shortlist | Pending | Pending | Not implemented |
@@ -20,4 +21,3 @@ Status is evidence-based. The two foundation health endpoints are the first impl
 | Admin sync/webhooks/jobs | Pending | Pending | Not implemented |
 
 Automated endpoint coverage can gate implemented routes, but full-release coverage additionally requires all above families and the detailed endpoint list in the preserved specification. A passing foundation test suite is not whole-product coverage.
-
