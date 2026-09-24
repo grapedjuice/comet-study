@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function HomePage() {
   return (
     <main id="main" tabIndex={-1}>
@@ -6,19 +8,23 @@ export default function HomePage() {
           <p className="intro">A little structure. A few good classmates.</p>
           <h1 id="hero-title">Make time to learn together.</h1>
           <p className="hero-description">
-            Your classes are better with a study group. Comet Study is being
-            built to help UT Dallas students find their people and make meeting
-            a habit.
+            Your classes are better with a study group. Find classmates in the
+            same course, agree on a time, and make showing up feel easy.
           </p>
-          <a className="button primary" href="#how-it-works">
-            See the weekly rhythm
-          </a>
+          <div className="hero-actions">
+            <Link className="button primary" href="/sign-in">
+              Find my study group <span aria-hidden="true">→</span>
+            </Link>
+            <a className="text-link" href="#how-it-works">
+              See how it works
+            </a>
+          </div>
           <div className="access-note">
-            <span className="status-dot" aria-hidden="true" />
+            <span className="status-dot ready" aria-hidden="true" />
             <p>
-              <strong>Student access is not open yet.</strong>
+              <strong>Built for UT Dallas students.</strong>
               <br />
-              We’re building and testing the essentials.
+              Use your university email to get started.
             </p>
           </div>
         </div>

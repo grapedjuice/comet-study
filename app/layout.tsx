@@ -27,6 +27,9 @@ export default function RootLayout({
           <nav aria-label="Main navigation">
             <Link href="/#how-it-works">How it works</Link>
             <Link href="/#privacy">Privacy approach</Link>
+            <Link className="nav-cta" href="/sign-in">
+              Sign in
+            </Link>
           </nav>
         </header>
         {children}

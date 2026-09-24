@@ -154,6 +154,25 @@ main,
 .primary:hover {
   background: #093b2a;
 }
+.primary span {
+  margin-left: 12px;
+  font-size: 1.2em;
+}
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex-wrap: wrap;
+}
+.text-link {
+  color: var(--forest);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.nav-cta {
+  color: var(--forest);
+  font-weight: 700;
+}
 .access-note {
   display: flex;
   align-items: flex-start;
@@ -173,6 +192,9 @@ main,
   border-radius: 50%;
   background: var(--accent);
   margin-top: 7px;
+}
+.status-dot.ready {
+  background: #16825c;
 }
 .orbit-illustration {
   position: relative;
@@ -339,6 +361,92 @@ main,
 .not-found > p {
   max-width: 55ch;
 }
+.auth-page {
+  min-height: calc(100vh - 220px);
+  display: grid;
+  place-items: center;
+  padding: 72px 0;
+}
+.auth-card {
+  width: min(100%, 520px);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  padding: clamp(28px, 6vw, 56px);
+  box-shadow: 0 24px 60px rgba(18, 78, 59, 0.08);
+}
+.back-link {
+  color: var(--secondary);
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+.back-link:hover {
+  text-decoration: underline;
+}
+.eyebrow {
+  margin-top: 48px;
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.auth-card h1 {
+  max-width: none;
+  margin-top: 10px;
+  font-size: clamp(2.5rem, 6vw, 4rem);
+}
+.auth-lede {
+  color: var(--secondary);
+  margin-top: 20px;
+  max-width: 42ch;
+}
+.auth-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 34px;
+}
+.auth-form label {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.auth-form input {
+  width: 100%;
+  min-height: 52px;
+  border: 1px solid #a9c2b2;
+  border-radius: var(--radius-control);
+  padding: 0 16px;
+  color: var(--ink);
+  background: #fbfdfb;
+  font: inherit;
+}
+.auth-form input::placeholder {
+  color: #80938a;
+}
+.auth-form button {
+  border: 0;
+  cursor: pointer;
+  margin-top: 8px;
+}
+.auth-form button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+.form-message {
+  margin-top: 8px;
+  font-size: 0.9rem;
+}
+.form-message.sent {
+  color: #14714f;
+}
+.form-message.error {
+  color: #9a3d22;
+}
+.auth-footnote {
+  color: var(--secondary);
+  font-size: 0.8rem;
+  margin-top: 28px;
+}
 @media (max-width: 850px) {
   .site-header,
   main,
@@ -380,6 +488,7 @@ main,
   }
   .site-header nav {
     gap: 24px;
+    flex-wrap: wrap;
   }
   .hero {
     grid-template-columns: 1fr;
