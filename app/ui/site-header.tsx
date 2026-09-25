@@ -2,20 +2,26 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 
 export function BrandMark() {
+  // Each instance needs its own gradient ids: the mark renders in both the
+  // rail and the mobile topbar, and a url(#id) that resolves into the hidden
+  // copy paints nothing.
+  const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
+  const tail = `bm-tail-${uid}`;
+  const core = `bm-core-${uid}`;
   return (
     <span className="brand-mark" aria-hidden="true">
       <svg viewBox="0 0 40 40" fill="none">
         <defs>
-          <linearGradient id="bm-tail" x1="10" y1="30" x2="25" y2="15">
+          <linearGradient id={tail} x1="10" y1="30" x2="25" y2="15">
             <stop stopColor="#6ff0d8" stopOpacity="0" />
             <stop offset="0.55" stopColor="#74c7ff" stopOpacity="0.7" />
             <stop offset="1" stopColor="#a99bff" />
           </linearGradient>
           <radialGradient
-            id="bm-core"
+            id={core}
             cx="0"
             cy="0"
             r="1"
@@ -29,23 +35,23 @@ export function BrandMark() {
         </defs>
         <path
           d="M22.2 17.8L9.5 30.5"
-          stroke="url(#bm-tail)"
+          stroke={`url(#${tail})`}
           strokeWidth="2.6"
           strokeLinecap="round"
         />
         <path
           d="M20.4 14.2L12 22.6"
-          stroke="url(#bm-tail)"
+          stroke={`url(#${tail})`}
           strokeWidth="1.8"
           strokeLinecap="round"
         />
         <path
           d="M25.8 19.6L17.4 28"
-          stroke="url(#bm-tail)"
+          stroke={`url(#${tail})`}
           strokeWidth="1.8"
           strokeLinecap="round"
         />
-        <circle cx="25" cy="15" r="9" fill="url(#bm-core)" />
+        <circle cx="25" cy="15" r="9" fill={`url(#${core})`} />
         <circle cx="25" cy="15" r="3.4" fill="#fff" />
       </svg>
     </span>
