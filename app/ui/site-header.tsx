@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export function BrandMark() {
@@ -56,6 +56,18 @@ export default function SiteHeader() {
   const [scrolled, setScrolled] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+  const [signingOut, setSigningOut] = useState(false);
+  async function signOut() {
+    setSigningOut(true);
+    await fetch("/api/v1/auth/sign-out", { method: "POST" }).catch(
+      () => undefined,
+    );
+    setSignedIn(false);
+    setSigningOut(false);
+    router.replace("/");
+    router.refresh();
+  }
   useEffect(() => {
     const update = () => setScrolled(window.scrollY > 24);
     update();
@@ -88,6 +100,16 @@ export default function SiteHeader() {
           <Link className="nav-link nav-privacy" href="/#privacy">
             Privacy approach
           </Link>
+          {signedIn ? (
+            <button
+              className="nav-link nav-signout"
+              type="button"
+              onClick={signOut}
+              disabled={signingOut}
+            >
+              {signingOut ? "Signing out…" : "Sign out"}
+            </button>
+          ) : null}
           <Link className="nav-cta" href={signedIn ? "/account" : "/sign-in"}>
             {signedIn ? "Your table" : "Sign in"}
           </Link>

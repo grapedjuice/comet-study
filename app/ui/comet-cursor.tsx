@@ -5,8 +5,8 @@ import { useEffect, useRef } from "react";
 /*
  * Cursor from the 21st.dev "Smooth Cursor" prompt (Magic UI): a spring-follow
  * ring around the pointer, extended with a comet tail — a tapered, glowing
- * ribbon in the brand gradient that streams behind fast movements. The core
- * dot tracks the pointer exactly so aiming never feels laggy.
+ * ribbon in the brand gradient that streams behind fast movements. The whole
+ * cursor eases toward the pointer so movement glides instead of snapping.
  */
 const TRAIL = 26;
 const INTERACTIVE = "a, button, [role='button'], summary, label";
@@ -34,6 +34,10 @@ export default function CometCursor() {
     resize();
 
     const pointer = { x: -100, y: -100 };
+    // The drawn cursor eases toward the pointer (like hackutd.co's), and the
+    // ring eases toward the head, so the whole comet glides.
+    const head = { x: -100, y: -100 };
+    let last = 0;
     const ring = { x: -100, y: -100, r: 16, target: 16 };
     // 0 = comet, 1 = text caret; springs between the two over text fields.
     const beam = { v: 0, h: 22 };
@@ -47,8 +51,8 @@ export default function CometCursor() {
     const move = (event: PointerEvent) => {
       if (event.pointerType !== "mouse") return;
       if (!visible) {
-        ring.x = pointer.x = event.clientX;
-        ring.y = pointer.y = event.clientY;
+        ring.x = head.x = pointer.x = event.clientX;
+        ring.y = head.y = pointer.y = event.clientY;
         trail.length = 0;
       }
       pointer.x = event.clientX;
@@ -77,18 +81,26 @@ export default function CometCursor() {
       wake();
     };
 
-    const draw = () => {
+    const draw = (now: number) => {
       frame = 0;
+      // Frame-rate independent easing: same feel at 60 Hz and 144 Hz.
+      const dt = last ? Math.min(64, now - last) : 16.7;
+      last = now;
+      const ease = (rate: number) => 1 - Math.pow(1 - rate, dt / 16.7);
+      const kHead = ease(0.2);
+      const kRing = ease(0.16);
+      head.x += (pointer.x - head.x) * kHead;
+      head.y += (pointer.y - head.y) * kHead;
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      ring.x += (pointer.x - ring.x) * 0.2;
-      ring.y += (pointer.y - ring.y) * 0.2;
+      ring.x += (head.x - ring.x) * kRing;
+      ring.y += (head.y - ring.y) * kRing;
       const r = ring.target * (pressed ? 0.75 : 1);
-      ring.r += (r - ring.r) * 0.2;
-      beam.v += ((overText ? 1 : 0) - beam.v) * 0.22;
+      ring.r += (r - ring.r) * ease(0.2);
+      beam.v += ((overText ? 1 : 0) - beam.v) * ease(0.22);
 
-      trail.unshift({ x: pointer.x, y: pointer.y });
+      trail.unshift({ x: head.x, y: head.y });
       if (trail.length > TRAIL) trail.pop();
       // Let the tail collapse back into the head when the pointer rests.
       for (let i = 1; i < trail.length; i++) {
@@ -100,8 +112,8 @@ export default function CometCursor() {
       // (the native I-beam is near-invisible on the dark fields).
       if (visible && beam.v > 0.02) {
         const h = beam.h * beam.v;
-        const x = ring.x;
-        const y = ring.y;
+        const x = head.x;
+        const y = head.y;
         ctx.globalCompositeOperation = "lighter";
         const halo = ctx.createLinearGradient(x, y - h / 2, x, y + h / 2);
         halo.addColorStop(0, "rgba(139, 123, 255, 0)");
@@ -154,24 +166,24 @@ export default function CometCursor() {
           }
         }
         const glow = ctx.createRadialGradient(
-          pointer.x,
-          pointer.y,
+          head.x,
+          head.y,
           0,
-          pointer.x,
-          pointer.y,
+          head.x,
+          head.y,
           18,
         );
         glow.addColorStop(0, "rgba(200, 190, 255, 0.55)");
         glow.addColorStop(1, "rgba(139, 123, 255, 0)");
         ctx.fillStyle = glow;
         ctx.beginPath();
-        ctx.arc(pointer.x, pointer.y, 18, 0, Math.PI * 2);
+        ctx.arc(head.x, head.y, 18, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.globalCompositeOperation = "source-over";
         ctx.fillStyle = "#ffffff";
         ctx.beginPath();
-        ctx.arc(pointer.x, pointer.y, pressed ? 2.5 : 3.5, 0, Math.PI * 2);
+        ctx.arc(head.x, head.y, pressed ? 2.5 : 3.5, 0, Math.PI * 2);
         ctx.fill();
 
         if (ring.r > 0.5) {
@@ -184,15 +196,19 @@ export default function CometCursor() {
         ctx.globalAlpha = 1;
       }
 
-      const head = trail[0];
+      const front = trail[0];
       const tail = trail[trail.length - 1];
       const settled =
-        Math.hypot(pointer.x - ring.x, pointer.y - ring.y) < 0.3 &&
+        Math.hypot(pointer.x - head.x, pointer.y - head.y) < 0.3 &&
+        Math.hypot(head.x - ring.x, head.y - ring.y) < 0.3 &&
         Math.abs(ring.r - r) < 0.3 &&
         Math.abs(beam.v - (overText ? 1 : 0)) < 0.01 &&
-        (!head || !tail || Math.hypot(head.x - tail.x, head.y - tail.y) < 0.5);
+        (!front ||
+          !tail ||
+          Math.hypot(front.x - tail.x, front.y - tail.y) < 0.5);
       idleFrames = settled ? idleFrames + 1 : 0;
       if (idleFrames < 3) wake();
+      else last = 0; // Resume from a fresh timestamp after idling.
     };
     function wake() {
       if (!frame) frame = requestAnimationFrame(draw);

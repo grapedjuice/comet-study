@@ -49,6 +49,22 @@ function AnchorGlide() {
   return null;
 }
 
+/** Let scrollable boxes (search results, section lists) scroll natively. */
+function scrollsItself(node: HTMLElement) {
+  if (node === document.documentElement || node === document.body) return false;
+  const overflow = getComputedStyle(node).overflowY;
+  return (
+    (overflow === "auto" || overflow === "scroll") &&
+    node.scrollHeight > node.clientHeight + 1
+  );
+}
+const lenisOptions = {
+  lerp: 0.085,
+  wheelMultiplier: 0.9,
+  smoothWheel: true,
+  prevent: scrollsItself,
+};
+
 /* 21st.dev "Smooth Scroll" prompt: Lenis on the root scroller. */
 export default function SmoothScroll({ children }: { children: ReactNode }) {
   const [enabled, setEnabled] = useState(false);
@@ -63,10 +79,7 @@ export default function SmoothScroll({ children }: { children: ReactNode }) {
   return (
     <>
       {enabled ? (
-        <ReactLenis
-          root
-          options={{ lerp: 0.085, wheelMultiplier: 0.9, smoothWheel: true }}
-        >
+        <ReactLenis root options={lenisOptions}>
           <AnchorGlide />
         </ReactLenis>
       ) : null}

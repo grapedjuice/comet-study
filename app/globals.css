@@ -382,6 +382,15 @@ html.has-comet-cursor * {
   color: var(--ink);
   background: rgba(255, 255, 255, 0.06);
 }
+.nav-signout {
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+}
+.nav-signout:disabled {
+  opacity: 0.6;
+}
 .nav-cta {
   margin-left: 6px;
   padding: 9px 18px;
@@ -2158,6 +2167,7 @@ a.eyebrow-pill {
   margin: 10px 0 0;
   padding: 6px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   border: 1px solid var(--line);
   border-radius: 16px;
   background: rgba(6, 7, 18, 0.7);
@@ -2560,6 +2570,10 @@ kbd {
   .nav-privacy,
   .nav-link {
     display: none;
+  }
+  .nav-link.nav-signout {
+    display: inline-flex;
+    padding-inline: 10px;
   }
   .header-pill {
     padding-left: 14px;
