@@ -14,11 +14,12 @@ export async function requestVerification(
   emailInput: string,
   deliver: VerificationDelivery,
   now = new Date(),
+  requesterHash: string | null = null,
 ) {
   const email = normalizeEmail(emailInput);
   if (!isEligibleUtdEmail(email)) throw new Error("ELIGIBLE_EMAIL_REQUIRED");
   if (!db) throw new Error("DATABASE_UNAVAILABLE");
-  const created = await createVerificationToken(db, email, now);
+  const created = await createVerificationToken(db, email, now, requesterHash);
   await deliver({
     email,
     token: created.rawToken,

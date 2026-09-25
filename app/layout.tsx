@@ -1,11 +1,25 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Link from "next/link";
+import CometCursor from "./ui/comet-cursor";
+import Cosmos from "./ui/cosmos";
+import ScrollRail from "./ui/scroll-rail";
+import SiteHeader from "./ui/site-header";
+import SmoothScroll from "./ui/smooth-scroll";
+import { ScrollProgress } from "./ui/motion";
+import "@fontsource-variable/geist";
+import "@fontsource/instrument-serif/400.css";
+import "@fontsource/instrument-serif/400-italic.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Comet Study — Make time to learn together",
+  title: "Comet Study — Same class. Better company.",
   description:
     "A course-aware study companion for UT Dallas students. Find your people, make a plan, and keep showing up.",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#04050b",
+  colorScheme: "dark",
 };
 
 export default function RootLayout({
@@ -14,29 +28,35 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+        <Cosmos />
+        <div className="grain" aria-hidden="true" />
+        <ScrollProgress />
+        <ScrollRail />
+        <CometCursor />
         <a className="skip-link" href="#main">
           Skip to content
         </a>
-        <header className="site-header">
-          <Link className="wordmark" href="/" aria-label="Comet Study home">
-            <span className="brand-mark" aria-hidden="true">
-              ✳
-            </span>{" "}
-            Comet Study
-          </Link>
-          <nav aria-label="Main navigation">
-            <Link href="/#how-it-works">How it works</Link>
-            <Link href="/#privacy">Privacy approach</Link>
-            <Link className="nav-cta" href="/sign-in">
-              Sign in
-            </Link>
-          </nav>
-        </header>
-        {children}
-        <footer className="site-footer">
-          <p>Made for the people you learn with.</p>
-          <p>Independent student project. Not an official UT Dallas service.</p>
-        </footer>
+        <SmoothScroll>
+          <SiteHeader />
+          {children}
+          <footer className="site-footer">
+            <div className="footer-inner">
+              <p className="footer-brand">
+                A little company. <em>A lot of possibility.</em>
+              </p>
+              <div className="footer-links">
+                <Link href="/#how-it-works">How it works</Link>
+                <Link className="footer-privacy" href="/#privacy">
+                  Privacy approach
+                </Link>
+                <Link href="/sign-in">Sign in</Link>
+              </div>
+              <p className="footer-note">
+                Independent student project. Not an official UT Dallas service.
+              </p>
+            </div>
+          </footer>
+        </SmoothScroll>
       </body>
     </html>
   );

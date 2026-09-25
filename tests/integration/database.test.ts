@@ -1,3 +1,5 @@
+import { resolve } from "node:path";
+import { readMigrationFiles } from "drizzle-orm/migrator";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   createDatabaseClient,
@@ -30,7 +32,10 @@ describe("migration and readiness on PostgreSQL", () => {
     const count = await db.pool.query(
       "select count(*)::int as n from drizzle.__drizzle_migrations",
     );
-    expect(count.rows[0].n).toBe(2);
+    const expected = readMigrationFiles({
+      migrationsFolder: resolve(process.cwd(), "db/migrations"),
+    }).length;
+    expect(count.rows[0].n).toBe(expected);
     const tables = await db.pool.query<{ table_name: string }>(
       "select table_name from information_schema.tables where table_schema = 'public' and table_name in ('users', 'verification_tokens', 'sessions_auth') order by table_name",
     );

@@ -7,10 +7,27 @@ import { Pool } from "pg";
 export function createDatabaseClient(url: string) {
   const pool = new Pool({
     connectionString: url,
-    connectionTimeoutMillis: 1500,
+    // Serverless Postgres can take a few seconds to wake from idle.
+    connectionTimeoutMillis: 5000,
     max: 5,
   });
   return { pool, close: () => pool.end() };
+}
+
+type Database = ReturnType<typeof createDatabaseClient>;
+const shared = globalThis as typeof globalThis & {
+  __cometDb?: { url: string; db: Database };
+};
+
+/** One pool per process for route handlers; survives dev hot reloads. */
+export function getDatabase(url: string): Database {
+  if (shared.__cometDb?.url !== url) {
+    void shared.__cometDb?.db.close().catch(() => undefined);
+    const db = createDatabaseClient(url);
+    db.pool.on("error", () => undefined);
+    shared.__cometDb = { url, db };
+  }
+  return shared.__cometDb.db;
 }
 
 const migrationsFolder = resolve(process.cwd(), "db/migrations");

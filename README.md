@@ -20,7 +20,26 @@ npx playwright install chromium
 npm run dev
 ```
 
-Open http://localhost:3000 . The landing page refreshes on source changes. No student login or live campus integration exists in this checkpoint. Previewing the landing page does not require a database; readiness correctly fails without configured dependencies.
+Open http://localhost:3000 . The landing page refreshes on source changes. Previewing the landing page does not require a database; readiness correctly fails without configured dependencies.
+
+### Working sign-in locally
+
+```sh
+npm run db:dev   # persistent embedded PostgreSQL in .data/, migrates, wires .env
+npm run dev
+```
+
+With `DATA_MODE=live` and a `NEBULA_API_KEY`, course search and sections use the UTD catalog from Nebula Labs; `npm run catalog:sync` refreshes the cached catalog (it also syncs on first search). New accounts go through `/welcome` (name → courses) before the personalized home page.
+
+`db:dev` sets `EMAIL_PROVIDER=console`, so the one-time sign-in link is printed in the dev server console (`[comet-study] sign-in link for …`). Open it to land on `/account`. `npm run db:dev -- stop` stops the cluster. For real email set `EMAIL_PROVIDER=resend` (or `sendgrid`) with its API key and `EMAIL_FROM`.
+
+### Previewing on other devices
+
+```sh
+cloudflared tunnel --url http://localhost:3000
+```
+
+Share the printed `*.trycloudflare.com` link. `next.config.ts` allows those origins for the dev server.
 
 ## Database and production-shaped startup
 

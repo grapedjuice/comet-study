@@ -24,6 +24,8 @@ const schema = z.object({
   RESEND_API_KEY: z.string().optional(),
   SENDGRID_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().optional(),
+  // Bearer token the scheduler sends to /api/v1/cron/* (Vercel sets it).
+  CRON_SECRET: z.string().optional(),
 });
 
 export type AppEnv = z.infer<typeof schema>;

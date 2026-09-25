@@ -15,6 +15,20 @@
       "when": 1790214354172,
       "tag": "0001_mean_tiger_shark",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790296059163,
+      "tag": "0002_fresh_snowbird",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790297439815,
+      "tag": "0003_mute_giant_man",
+      "breakpoints": true
     }
   ]
 }

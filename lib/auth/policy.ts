@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from "node:crypto";
+import { createHash, createHmac, randomBytes } from "node:crypto";
 
 const ELIGIBLE_DOMAIN = "utdallas.edu";
 
@@ -19,6 +19,15 @@ export function isEligibleUtdEmail(input: string): boolean {
 
 export function hashToken(raw: string): string {
   return createHash("sha256").update(raw, "utf8").digest("hex");
+}
+
+/** Keyed hash of the caller's IP so raw addresses are never stored. */
+export function requesterHash(request: Request, secret: string): string | null {
+  const ip =
+    request.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+    request.headers.get("x-real-ip")?.trim();
+  if (!ip) return null;
+  return createHmac("sha256", secret).update(ip, "utf8").digest("hex");
 }
 
 export function issueToken(): { raw: string; digest: string } {

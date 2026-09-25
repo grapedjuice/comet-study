@@ -4,6 +4,7 @@ import {
   isEligibleUtdEmail,
   issueToken,
   normalizeEmail,
+  requesterHash,
 } from "../../lib/auth/policy";
 
 describe("authentication policy", () => {
@@ -37,5 +38,25 @@ describe("authentication policy", () => {
     const second = issueToken();
     expect(first.raw).not.toBe(second.raw);
     expect(first.digest).not.toBe(second.digest);
+  });
+});
+
+describe("requester hash", () => {
+  const req = (headers: Record<string, string>) =>
+    new Request("https://comet.test/", { headers });
+  it("keys the first forwarded IP and never returns it raw", () => {
+    const a = requesterHash(
+      req({ "x-forwarded-for": "203.0.113.9, 10.0.0.1" }),
+      "k".repeat(32),
+    );
+    expect(a).toMatch(/^[0-9a-f]{64}$/);
+    expect(a).not.toContain("203.0.113.9");
+    expect(
+      requesterHash(req({ "x-real-ip": "203.0.113.9" }), "k".repeat(32)),
+    ).toBe(a);
+    expect(
+      requesterHash(req({ "x-forwarded-for": "203.0.113.9" }), "j".repeat(32)),
+    ).not.toBe(a);
+    expect(requesterHash(req({}), "k".repeat(32))).toBeNull();
   });
 });

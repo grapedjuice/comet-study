@@ -1,0 +1,6 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "buildCommand": "npm run db:migrate && npm run build",
+  "crons": [{ "path": "/api/v1/cron/catalog", "schedule": "0 9 * * 1" }]
+}

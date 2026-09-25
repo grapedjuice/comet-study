@@ -9,10 +9,15 @@ import {
 
 type Database = ReturnType<typeof createDatabaseClient>;
 
+export const MAX_LIVE_TOKENS = 3;
+/** Sign-in emails one network may trigger per hour, across all addresses. */
+export const MAX_REQUESTS_PER_REQUESTER_HOUR = 10;
+
 export async function createVerificationToken(
   db: Database,
   emailInput: string,
   now = new Date(),
+  requesterHash: string | null = null,
 ) {
   const email = normalizeEmail(emailInput);
   if (!isEligibleUtdEmail(email)) throw new Error("ELIGIBLE_EMAIL_REQUIRED");
@@ -21,6 +26,22 @@ export async function createVerificationToken(
   const client = await db.pool.connect();
   try {
     await client.query("begin");
+    // Serialize requests per address, then cap live links to limit inbox spam.
+    await client.query("select pg_advisory_xact_lock(hashtext($1))", [email]);
+    const live = await client.query<{ count: string }>(
+      "select count(*) from verification_tokens where identifier = $1 and used_at is null and expires_at > $2",
+      [email, now],
+    );
+    if (Number(live.rows[0].count) >= MAX_LIVE_TOKENS)
+      throw new Error("RATE_LIMITED");
+    if (requesterHash) {
+      const recent = await client.query<{ count: string }>(
+        "select count(*) from verification_tokens where requester_hash = $1 and created_at > $2",
+        [requesterHash, new Date(now.getTime() - 60 * 60 * 1000)],
+      );
+      if (Number(recent.rows[0].count) >= MAX_REQUESTS_PER_REQUESTER_HOUR)
+        throw new Error("RATE_LIMITED");
+    }
     const existing = await client.query<{ id: string }>(
       "select id from users where email_normalized = $1",
       [email],
@@ -34,8 +55,16 @@ export async function createVerificationToken(
         )
       ).rows[0].id;
     await client.query(
-      "insert into verification_tokens (id, user_id, identifier, token_hash, expires_at) values ($1, $2, $3, $4, $5)",
-      [randomUUID(), userId, email, token.digest, expiresAt],
+      "insert into verification_tokens (id, user_id, identifier, token_hash, expires_at, requester_hash, created_at) values ($1, $2, $3, $4, $5, $6, $7)",
+      [
+        randomUUID(),
+        userId,
+        email,
+        token.digest,
+        expiresAt,
+        requesterHash,
+        now,
+      ],
     );
     await client.query("commit");
     return { rawToken: token.raw, tokenHash: token.digest, email, expiresAt };
@@ -79,8 +108,14 @@ export async function redeemVerificationToken(
       "insert into sessions_auth (id, user_id, token_hash, expires_at, last_rotated_at) values ($1, $2, $3, $4, $5)",
       [randomUUID(), row.user_id, session.digest, expiresAt, now],
     );
+    const profile = await client.query<{
+      onboarding_completed_at: Date | null;
+    }>("select onboarding_completed_at from users where id = $1", [
+      row.user_id,
+    ]);
     await client.query("commit");
     return {
+      onboardingRequired: !profile.rows[0]?.onboarding_completed_at,
       userId: row.user_id,
       sessionToken: session.raw,
       sessionTokenHash: session.digest,
