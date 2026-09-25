@@ -248,10 +248,6 @@ html.has-comet-cursor,
 html.has-comet-cursor * {
   cursor: none !important;
 }
-html.has-comet-cursor.comet-cursor-text input,
-html.has-comet-cursor.comet-cursor-text textarea {
-  cursor: text !important;
-}
 
 /* ---------- Header ---------- */
 .site-header {

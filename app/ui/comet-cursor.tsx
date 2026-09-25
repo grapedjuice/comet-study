@@ -35,6 +35,8 @@ export default function CometCursor() {
 
     const pointer = { x: -100, y: -100 };
     const ring = { x: -100, y: -100, r: 16, target: 16 };
+    // 0 = comet, 1 = text caret; springs between the two over text fields.
+    const beam = { v: 0, h: 22 };
     const trail: { x: number; y: number }[] = [];
     let visible = false;
     let overText = false;
@@ -55,7 +57,11 @@ export default function CometCursor() {
       const target = event.target as Element | null;
       overText = Boolean(target?.closest?.(TEXT));
       ring.target = overText ? 0 : target?.closest?.(INTERACTIVE) ? 30 : 16;
-      root.classList.toggle("comet-cursor-text", overText);
+      if (overText) {
+        // Match the caret to the field's text size.
+        const size = parseFloat(getComputedStyle(target as Element).fontSize);
+        beam.h = Math.min(34, Math.max(16, (size || 16) * 1.35));
+      }
       wake();
     };
     const leave = () => {
@@ -80,6 +86,7 @@ export default function CometCursor() {
       ring.y += (pointer.y - ring.y) * 0.2;
       const r = ring.target * (pressed ? 0.75 : 1);
       ring.r += (r - ring.r) * 0.2;
+      beam.v += ((overText ? 1 : 0) - beam.v) * 0.22;
 
       trail.unshift({ x: pointer.x, y: pointer.y });
       if (trail.length > TRAIL) trail.pop();
@@ -89,7 +96,44 @@ export default function CometCursor() {
         trail[i].y += (trail[i - 1].y - trail[i].y) * 0.26;
       }
 
-      if (visible && !overText) {
+      // Over text fields the comet folds into a glowing, spring-follow caret
+      // (the native I-beam is near-invisible on the dark fields).
+      if (visible && beam.v > 0.02) {
+        const h = beam.h * beam.v;
+        const x = ring.x;
+        const y = ring.y;
+        ctx.globalCompositeOperation = "lighter";
+        const halo = ctx.createLinearGradient(x, y - h / 2, x, y + h / 2);
+        halo.addColorStop(0, "rgba(139, 123, 255, 0)");
+        halo.addColorStop(0.5, `rgba(139, 150, 255, ${0.35 * beam.v})`);
+        halo.addColorStop(1, "rgba(94, 234, 212, 0)");
+        ctx.strokeStyle = halo;
+        ctx.lineCap = "round";
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.moveTo(x, y - h / 2);
+        ctx.lineTo(x, y + h / 2);
+        ctx.stroke();
+        ctx.globalCompositeOperation = "source-over";
+        const core = ctx.createLinearGradient(x, y - h / 2, x, y + h / 2);
+        core.addColorStop(0, `rgba(190, 180, 255, ${beam.v})`);
+        core.addColorStop(1, `rgba(140, 240, 225, ${beam.v})`);
+        ctx.strokeStyle = core;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x, y - h / 2);
+        ctx.lineTo(x, y + h / 2);
+        // Small serifs so it still reads as a text cursor.
+        const w = 4 * beam.v;
+        ctx.moveTo(x - w, y - h / 2);
+        ctx.lineTo(x + w, y - h / 2);
+        ctx.moveTo(x - w, y + h / 2);
+        ctx.lineTo(x + w, y + h / 2);
+        ctx.stroke();
+      }
+
+      if (visible && beam.v < 0.98) {
+        ctx.globalAlpha = 1 - beam.v;
         ctx.globalCompositeOperation = "lighter";
         ctx.lineCap = "round";
         // Two passes: a wide soft halo, then a bright tapered core.
@@ -137,6 +181,7 @@ export default function CometCursor() {
           ctx.arc(ring.x, ring.y, ring.r, 0, Math.PI * 2);
           ctx.stroke();
         }
+        ctx.globalAlpha = 1;
       }
 
       const head = trail[0];
@@ -144,6 +189,7 @@ export default function CometCursor() {
       const settled =
         Math.hypot(pointer.x - ring.x, pointer.y - ring.y) < 0.3 &&
         Math.abs(ring.r - r) < 0.3 &&
+        Math.abs(beam.v - (overText ? 1 : 0)) < 0.01 &&
         (!head || !tail || Math.hypot(head.x - tail.x, head.y - tail.y) < 0.5);
       idleFrames = settled ? idleFrames + 1 : 0;
       if (idleFrames < 3) wake();
@@ -160,7 +206,7 @@ export default function CometCursor() {
     window.addEventListener("resize", resize);
     return () => {
       cancelAnimationFrame(frame);
-      root.classList.remove("has-comet-cursor", "comet-cursor-text");
+      root.classList.remove("has-comet-cursor");
       window.removeEventListener("pointermove", move);
       document.removeEventListener("pointerleave", leave);
       window.removeEventListener("blur", leave);
