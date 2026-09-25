@@ -225,3 +225,20 @@ test("the catalog cron refuses callers without the secret", async ({
 }) => {
   expect((await request.get("/api/v1/cron/catalog")).status()).toBe(401);
 });
+
+test("sign-in links wait for a click so mail scanners can't spend them", async ({
+  page,
+}) => {
+  const posts: string[] = [];
+  page.on("request", (r) => r.method() === "POST" && posts.push(r.url()));
+  await page.goto(`/verify#token=${"a".repeat(43)}`);
+  const button = page.getByRole("button", { name: /Continue to Comet Study/ });
+  await expect(button).toBeVisible();
+  await expect(page).toHaveURL(/\/verify$/);
+  expect(posts).toEqual([]);
+  await button.click();
+  await expect(
+    page.getByRole("heading", { name: "That link didn’t work." }),
+  ).toBeVisible();
+  expect(posts.some((u) => u.endsWith("/api/v1/auth/verify-email"))).toBe(true);
+});
