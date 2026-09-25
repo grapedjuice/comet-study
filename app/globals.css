@@ -528,6 +528,10 @@ html.has-comet-cursor * {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  /* Italic overhangs and descenders spill past the inline-block box, and
+     background-clip only paints inside it. Grow the box, keep the layout. */
+  padding: 0.04em 0.14em 0.22em;
+  margin: -0.04em -0.14em -0.22em;
 }
 .gradient-serif .blur-word:nth-of-type(2) {
   background-position: 100% 0;

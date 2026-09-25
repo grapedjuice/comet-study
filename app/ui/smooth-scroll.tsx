@@ -24,7 +24,12 @@ function AnchorGlide() {
       const link = (event.target as Element | null)?.closest?.("a[href]");
       if (!(link instanceof HTMLAnchorElement) || link.target) return;
       const url = new URL(link.href);
-      if (url.origin !== location.origin || url.pathname !== location.pathname)
+      // Same path with a different query (?tab=…) is a real navigation.
+      if (
+        url.origin !== location.origin ||
+        url.pathname !== location.pathname ||
+        url.search !== location.search
+      )
         return;
       if (!url.hash) {
         event.preventDefault();
