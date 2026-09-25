@@ -1,3 +1,4 @@
+import { createTransport } from "nodemailer";
 import type { AppEnv } from "../env";
 import type { VerificationDelivery } from "./service";
 
@@ -16,9 +17,32 @@ function emailBody(link: string) {
   return { text, html };
 }
 
+type Mail = {
+  from: string;
+  to: string;
+  subject: string;
+  text: string;
+  html: string;
+};
+export type SendMail = (mail: Mail) => Promise<unknown>;
+
+function gmailSender(env: AppEnv): SendMail {
+  const transport = createTransport({
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
+    auth: {
+      user: env.GMAIL_USER?.trim(),
+      pass: env.GMAIL_APP_PASSWORD?.replace(/\s/g, ""),
+    },
+  });
+  return (mail) => transport.sendMail(mail);
+}
+
 export function createDelivery(
   env: AppEnv,
   fetchImpl: typeof fetch = fetch,
+  sendMail?: SendMail,
 ): VerificationDelivery {
   return async ({ email, token }) => {
     const link = verificationLink(env.APP_URL, token);
@@ -26,6 +50,21 @@ export function createDelivery(
     const { text, html } = emailBody(link);
     if (env.EMAIL_PROVIDER === "console" && env.NODE_ENV !== "production") {
       console.info(`[comet-study] sign-in link for ${email}: ${link}`);
+      return;
+    }
+    if (env.EMAIL_PROVIDER === "gmail") {
+      const send = sendMail ?? gmailSender(env);
+      try {
+        await send({
+          from: `"Comet Study" <${env.GMAIL_USER?.trim()}>`,
+          to: email,
+          subject,
+          text,
+          html,
+        });
+      } catch {
+        throw new Error("EMAIL_UNAVAILABLE");
+      }
       return;
     }
     let response: Response;
