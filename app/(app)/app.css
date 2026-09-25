@@ -1145,6 +1145,8 @@ a.item-row:hover .item-go {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  width: 100%;
+  min-width: 0;
   text-align: left;
   cursor: pointer;
 }
@@ -1155,6 +1157,9 @@ a.item-row:hover .item-go {
   box-shadow: 0 0 0 4px rgba(139, 123, 255, 0.2);
 }
 .select-value {
+  /* Long labels (full group names) ellipsize instead of widening the box. */
+  flex: 1 1 auto;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2080,6 +2085,10 @@ a.item-row:hover .item-go {
   position: relative;
   flex: 1 1 220px;
 }
+/* Search gets its own row; the filters share the next one evenly. */
+.library-search .search-field {
+  flex-basis: 100%;
+}
 .search-field .icon {
   z-index: 2;
   position: absolute;
@@ -2705,13 +2714,18 @@ a.item-row:hover .item-go {
   }
 }
 .library-filter {
-  flex: 0 1 190px;
+  flex: 1 1 160px;
 }
 .library-filter .select-trigger {
+  width: 100%;
   min-height: 44px;
   font-size: 14.5px;
 }
 .room-search .select-trigger {
   min-height: 46px;
   font-size: 15px;
+}
+
+.nowrap {
+  white-space: nowrap;
 }

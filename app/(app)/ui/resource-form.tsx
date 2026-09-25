@@ -81,7 +81,8 @@ export function ResourceForm({
           <Icon name="upload" size={22} />
           <span>{fileName || "Choose a file"}</span>
           <small>
-            PDF, images, Word, PowerPoint, Excel or text · up to 4 MB
+            PDF, images, Word, PowerPoint, Excel or text ·{" "}
+            <span className="nowrap">up to 4 MB</span>
           </small>
         </label>
       ) : (
@@ -105,7 +106,7 @@ export function ResourceForm({
             name="title"
             required
             maxLength={120}
-            placeholder="Chapter 5 review sheet"
+            placeholder="Ch. 5 review"
           />
         </label>
         <GlassSelect
@@ -124,7 +125,7 @@ export function ResourceForm({
           className="field"
           name="description"
           maxLength={600}
-          placeholder="Covers 5.1–5.4, answers on the last page"
+          placeholder="Covers 5.1–5.4"
         />
       </label>
       <p className="fine-print">
