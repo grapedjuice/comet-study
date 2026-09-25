@@ -85,6 +85,13 @@ export default function SignInPage() {
                   ? " (Local dev: the link is also printed in the server console.)"
                   : ""}
               </p>
+              {delivery === "email" ? (
+                <p className="sent-hint">
+                  Don’t see it within a minute? Check your <strong>Junk</strong>{" "}
+                  or <strong>Spam</strong> folder, and mark it “Not junk” so
+                  future links land in your inbox.
+                </p>
+              ) : null}
               {devLink ? (
                 <a className="button primary" href={devLink}>
                   Open sign-in link <span aria-hidden="true">→</span>

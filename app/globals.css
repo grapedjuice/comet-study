@@ -1855,6 +1855,16 @@ a.eyebrow-pill {
 .sent-state p {
   color: var(--muted);
 }
+.sent-state .sent-hint {
+  padding: 12px 16px;
+  border: 1px solid rgba(250, 204, 21, 0.28);
+  border-radius: 14px;
+  background: rgba(250, 204, 21, 0.07);
+  font-size: 14px;
+}
+.sent-state .sent-hint strong {
+  color: var(--ink);
+}
 .sent-state button {
   padding: 0;
   border: 0;
