@@ -10,7 +10,9 @@ export default function SignInPage() {
     "idle",
   );
   const [message, setMessage] = useState("");
-  const [delivery, setDelivery] = useState<"email" | "console">("email");
+  const [delivery, setDelivery] = useState<"email" | "console" | "instant">(
+    "email",
+  );
   const [devLink, setDevLink] = useState("");
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -28,12 +30,17 @@ export default function SignInPage() {
         throw new Error(
           payload.error?.message ?? "We couldn't send your link.",
         );
-      setDelivery(payload.data?.delivery === "console" ? "console" : "email");
+      const mode = payload.data?.delivery;
+      setDelivery(mode === "console" || mode === "instant" ? mode : "email");
       setDevLink(
         typeof payload.data?.devLink === "string" ? payload.data.devLink : "",
       );
       setStatus("sent");
-      setMessage("Check your university inbox for a sign-in link.");
+      setMessage(
+        mode === "instant"
+          ? "Your sign-in link is ready."
+          : "Check your university inbox for a sign-in link.",
+      );
     } catch (error) {
       setStatus("error");
       setMessage(
@@ -78,13 +85,20 @@ export default function SignInPage() {
               <p className="form-message sent" role="status">
                 {message}
               </p>
-              <p>
-                We sent a one-time link to <strong>{email}</strong>. It works
-                once and expires in 10 minutes.
-                {delivery === "console"
-                  ? " (Local dev: the link is also printed in the server console.)"
-                  : ""}
-              </p>
+              {delivery === "instant" ? (
+                <p>
+                  Signing in as <strong>{email}</strong>. The link works once
+                  and expires in 10 minutes.
+                </p>
+              ) : (
+                <p>
+                  We sent a one-time link to <strong>{email}</strong>. It works
+                  once and expires in 10 minutes.
+                  {delivery === "console"
+                    ? " (Local dev: the link is also printed in the server console.)"
+                    : ""}
+                </p>
+              )}
               {delivery === "email" ? (
                 <p className="sent-hint">
                   Don’t see it within a minute? Check your <strong>Junk</strong>{" "}

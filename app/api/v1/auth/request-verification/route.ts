@@ -41,17 +41,19 @@ export async function POST(request: Request) {
       503,
     );
   }
-  if (env.EMAIL_PROVIDER === "disabled")
+  // Hand the link back so the sign-in page can open it directly: always in
+  // local console mode (parseEnv rejects that in production), and anywhere
+  // INSTANT_SIGNIN=on, which skips sending the email altogether.
+  const instant = env.INSTANT_SIGNIN === "on";
+  const consoleMode =
+    env.EMAIL_PROVIDER === "console" && env.NODE_ENV !== "production";
+  if (env.EMAIL_PROVIDER === "disabled" && !instant)
     return apiError(
       "EMAIL_UNAVAILABLE",
       "Student sign-in is not available in this preview",
       503,
     );
 
-  // Local console mode only (parseEnv rejects it in production): hand the
-  // link back so the sign-in page can open it without copying from a terminal.
-  const consoleMode =
-    env.EMAIL_PROVIDER === "console" && env.NODE_ENV !== "production";
   let devLink: string | undefined;
   const deliver = createDelivery(env);
   try {
@@ -59,15 +61,15 @@ export async function POST(request: Request) {
       getDatabase(env.DATABASE_URL),
       parsed.data.email,
       async (input) => {
-        await deliver(input);
-        if (consoleMode)
+        if (!instant) await deliver(input);
+        if (instant || consoleMode)
           devLink = `/verify#token=${encodeURIComponent(input.token)}`;
       },
       new Date(),
       requesterHash(request, env.AUTH_SECRET),
     );
     return ok({
-      delivery: consoleMode ? "console" : "email",
+      delivery: instant ? "instant" : consoleMode ? "console" : "email",
       expiresInSeconds: result.expiresInSeconds,
       ...(devLink ? { devLink } : {}),
     });

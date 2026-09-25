@@ -27,6 +27,9 @@ const schema = z.object({
   // Gmail SMTP with an app password (EMAIL_PROVIDER=gmail); no domain needed.
   GMAIL_USER: z.string().optional(),
   GMAIL_APP_PASSWORD: z.string().optional(),
+  // "on" skips the inbox: the sign-in page gets the link back as a button.
+  // Anyone can then sign in as any eligible address, so it's opt-in.
+  INSTANT_SIGNIN: z.enum(["on", "off"]).default("off"),
   // Bearer token the scheduler sends to /api/v1/cron/* (Vercel sets it).
   CRON_SECRET: z.string().optional(),
 });
