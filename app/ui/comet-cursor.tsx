@@ -87,8 +87,8 @@ export default function CometCursor() {
       const dt = last ? Math.min(64, now - last) : 16.7;
       last = now;
       const ease = (rate: number) => 1 - Math.pow(1 - rate, dt / 16.7);
-      const kHead = ease(0.2);
-      const kRing = ease(0.16);
+      const kHead = ease(0.34);
+      const kRing = ease(0.24);
       head.x += (pointer.x - head.x) * kHead;
       head.y += (pointer.y - head.y) * kHead;
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);

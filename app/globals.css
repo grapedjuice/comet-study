@@ -184,6 +184,36 @@ section:focus {
   box-shadow: 0 0 12px rgba(116, 199, 255, 0.7);
 }
 
+/* Inner scroll areas (search results, section lists): a slim glowing rail
+   that matches .scroll-rail instead of the default gray bar. */
+body *::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+body *::-webkit-scrollbar-track {
+  background: transparent;
+}
+body *::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #8b7bff, #5eead4) padding-box;
+  opacity: 0.8;
+}
+body *::-webkit-scrollbar-thumb:hover {
+  border-width: 2px;
+}
+body *::-webkit-scrollbar-button,
+body *::-webkit-scrollbar-corner {
+  display: none;
+  background: transparent;
+}
+@supports not selector(::-webkit-scrollbar) {
+  body * {
+    scrollbar-width: thin;
+    scrollbar-color: #8b7bff transparent;
+  }
+}
+
 /* Native scrollbar is replaced by .scroll-rail */
 html::-webkit-scrollbar {
   display: none;
