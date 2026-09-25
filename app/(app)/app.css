@@ -695,6 +695,14 @@ textarea.field {
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
 }
+/* Full-width in the share form, so the two options split it evenly. */
+.resource-form .segmented {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.resource-form .segmented > * {
+  justify-content: center;
+}
 .confirm-row {
   display: inline-flex;
   flex-wrap: wrap;
