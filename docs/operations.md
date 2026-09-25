@@ -5,7 +5,7 @@ Deployed 2026-09-24 at https://comet-study.vercel.app (Vercel Hobby, project `co
 - Database: Neon Postgres via the Vercel Marketplace (`comet-study-db`); `DATABASE_URL` is injected by the integration.
 - Migrations run in the build (`vercel.json` buildCommand: `npm run db:migrate && npm run build`). Previews share the production database, so migrations must stay forward-compatible.
 - Secrets (`AUTH_SECRET`, `CRON_SECRET`, `NEBULA_API_KEY`) are stored as sensitive Vercel env vars for production and preview. `APP_URL=https://comet-study.vercel.app`, `DATA_MODE=live`.
-- `EMAIL_PROVIDER=disabled` until a sending domain is verified; sign-in answers 503 "not available in this preview". To enable: verify a domain in Resend, set `EMAIL_PROVIDER=resend`, `RESEND_API_KEY`, `EMAIL_FROM`, then redeploy.
+- Email: `EMAIL_PROVIDER=gmail` (production only) sends sign-in links through Gmail SMTP using `GMAIL_USER` + `GMAIL_APP_PASSWORD` (sensitive), about 500/day. Previews keep `EMAIL_PROVIDER=disabled`. With a domain later, switch to `resend` (`RESEND_API_KEY`, `EMAIL_FROM`).
 - Catalog: Vercel Cron calls `/api/v1/cron/catalog` Mondays 09:00 UTC with `CRON_SECRET`; searches also refresh it when older than 7 days.
 
 ## Required production controls
