@@ -236,7 +236,7 @@ export function StackingCard({
   const dim = useTransform(
     progress,
     [start, Math.min(1, start + 1 / total)],
-    [1, index === total - 1 ? 1 : 0.55],
+    [1, index === total - 1 ? 1 : 0.3],
   );
   const filter = useTransform(dim, (value) => `brightness(${value})`);
   const { scrollYProgress: enter } = useScroll({

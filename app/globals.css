@@ -1119,12 +1119,13 @@ a.eyebrow-pill {
   overflow: hidden;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-lg);
-  background: var(--glass-strong);
+  /* Solid, not glass: the stack's scroll filter isolates backdrop-filter, so
+     a translucent card would show the one beneath it unblurred. */
+  background: linear-gradient(180deg, #121430 0%, #0b0c1d 100%);
   box-shadow:
     0 -20px 60px -20px rgba(0, 0, 0, 0.6),
     0 40px 100px -40px rgba(0, 0, 0, 0.9),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(28px) saturate(150%);
   transform-origin: 50% 0%;
 }
 .stack-card::before {
