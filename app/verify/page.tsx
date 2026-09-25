@@ -55,14 +55,13 @@ export default function VerifyPage() {
         );
       setState("done");
       const needsOnboarding = payload.data?.onboardingRequired !== false;
-      setTimeout(
-        () => router.replace(needsOnboarding ? "/welcome" : "/"),
-        900,
-      );
+      setTimeout(() => router.replace(needsOnboarding ? "/welcome" : "/"), 900);
     } catch (error) {
       setState("error");
       setMessage(
-        error instanceof Error ? error.message : "We couldn't verify this link.",
+        error instanceof Error
+          ? error.message
+          : "We couldn't verify this link.",
       );
     }
   }
@@ -73,7 +72,9 @@ export default function VerifyPage() {
         {state === "checking" || state === "verifying" ? (
           <>
             <div className="spinner" aria-hidden="true" />
-            <h1>{state === "checking" ? "Opening your link…" : "Signing you in…"}</h1>
+            <h1>
+              {state === "checking" ? "Opening your link…" : "Signing you in…"}
+            </h1>
             <p role="status">Hang tight — this only takes a second.</p>
           </>
         ) : state === "ready" ? (
