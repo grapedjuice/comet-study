@@ -4,7 +4,9 @@ import { useState } from "react";
 import { RESOURCE_KINDS } from "@/lib/study-options";
 import { addResourceAction } from "../actions";
 import { ActionForm, SubmitButton, toast } from "./forms";
+import { GlassSelect } from "./glass-select";
 import { Icon } from "./icons";
+import { SmoothInput } from "../../ui/smooth-input";
 
 const MAX = 4 * 1024 * 1024;
 const ACCEPT =
@@ -33,16 +35,11 @@ export function ResourceForm({
       }}
     >
       {groups ? (
-        <label className="form-field">
-          <span className="field-label">Share with</span>
-          <select className="field" name="groupId" required>
-            {groups.map((g) => (
-              <option key={g.id} value={g.id}>
-                {g.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <GlassSelect
+          label="Share with"
+          name="groupId"
+          options={groups.map((g) => ({ value: g.id, label: g.label }))}
+        />
       ) : null}
       <div
         className="segmented"
@@ -90,7 +87,7 @@ export function ResourceForm({
       ) : (
         <label className="form-field">
           <span className="field-label">Link</span>
-          <input
+          <SmoothInput
             className="field"
             type="url"
             name="url"
@@ -103,7 +100,7 @@ export function ResourceForm({
       <div className="form-row">
         <label className="form-field grow">
           <span className="field-label">Title</span>
-          <input
+          <SmoothInput
             className="field"
             name="title"
             required
@@ -111,27 +108,19 @@ export function ResourceForm({
             placeholder="Chapter 5 review sheet"
           />
         </label>
-        <label className="form-field">
-          <span className="field-label">Type</span>
-          <select
-            className="field"
-            name="kind"
-            defaultValue={mode === "link" ? "link" : "notes"}
-            key={mode}
-          >
-            {RESOURCE_KINDS.map((k) => (
-              <option key={k.id} value={k.id}>
-                {k.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <GlassSelect
+          key={mode}
+          label="Type"
+          name="kind"
+          defaultValue={mode === "link" ? "link" : "notes"}
+          options={RESOURCE_KINDS.map((k) => ({ value: k.id, label: k.label }))}
+        />
       </div>
       <label className="form-field">
         <span className="field-label">
           Note <em>optional</em>
         </span>
-        <input
+        <SmoothInput
           className="field"
           name="description"
           maxLength={600}

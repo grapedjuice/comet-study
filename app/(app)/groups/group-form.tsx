@@ -6,6 +6,8 @@ import {
 } from "@/lib/study-options";
 import { createGroupAction, updateGroupAction } from "../actions";
 import { ActionForm, ChipGroup, SubmitButton } from "../ui/forms";
+import { GlassSelect } from "../ui/glass-select";
+import { SmoothInput, SmoothTextarea } from "../../ui/smooth-input";
 
 /** Create (with a course picker) or edit (with a group) a study group. */
 export function GroupForm({
@@ -24,25 +26,19 @@ export function GroupForm({
       className="stack-form"
     >
       {courses ? (
-        <label className="form-field">
-          <span className="field-label">Course</span>
-          <select
-            className="field"
-            name="courseCode"
-            defaultValue={course ?? courses[0]?.code}
-            required
-          >
-            {courses.map((c) => (
-              <option key={c.code} value={c.code}>
-                {c.code} — {c.title}
-              </option>
-            ))}
-          </select>
-        </label>
+        <GlassSelect
+          label="Course"
+          name="courseCode"
+          defaultValue={course ?? courses[0]?.code}
+          options={courses.map((c) => ({
+            value: c.code,
+            label: `${c.code} — ${c.title}`,
+          }))}
+        />
       ) : null}
       <label className="form-field">
         <span className="field-label">Group name</span>
-        <input
+        <SmoothInput
           className="field"
           name="name"
           maxLength={60}
@@ -55,7 +51,7 @@ export function GroupForm({
         <span className="field-label">
           What’s the plan? <em>optional</em>
         </span>
-        <textarea
+        <SmoothTextarea
           className="field"
           name="description"
           rows={3}
@@ -65,34 +61,24 @@ export function GroupForm({
         />
       </label>
       <div className="form-row">
-        <label className="form-field">
-          <span className="field-label">Group size</span>
-          <select
-            className="field"
-            name="capacity"
-            defaultValue={String(group?.capacity ?? 6)}
-          >
-            {[4, 5, 6, 7, 8].map((n) => (
-              <option key={n} value={n}>
-                Up to {n} people
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="form-field">
-          <span className="field-label">Where you’ll meet</span>
-          <select
-            className="field"
-            name="modality"
-            defaultValue={group?.modality ?? "in_person"}
-          >
-            {GROUP_MODALITIES.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <GlassSelect
+          label="Group size"
+          name="capacity"
+          defaultValue={String(group?.capacity ?? 6)}
+          options={[4, 5, 6, 7, 8].map((n) => ({
+            value: String(n),
+            label: `Up to ${n} people`,
+          }))}
+        />
+        <GlassSelect
+          label="Where you’ll meet"
+          name="modality"
+          defaultValue={group?.modality ?? "in_person"}
+          options={GROUP_MODALITIES.map((m) => ({
+            value: m.id,
+            label: m.label,
+          }))}
+        />
       </div>
       <fieldset className="chip-group">
         <legend className="field-label">Who can join</legend>
@@ -121,7 +107,7 @@ export function GroupForm({
         <span className="field-label">
           Usual rhythm <em>optional</em>
         </span>
-        <input
+        <SmoothInput
           className="field"
           name="cadence"
           maxLength={80}

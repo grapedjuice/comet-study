@@ -5,7 +5,9 @@ import { listMyGroups } from "@/lib/groups";
 import { listResources } from "@/lib/resources";
 import { RESOURCE_KINDS } from "@/lib/study-options";
 import { Empty, PageHeader, Panel } from "../ui/bits";
+import { GlassSelect } from "../ui/glass-select";
 import { Icon } from "../ui/icons";
+import { SmoothInput } from "../../ui/smooth-input";
 import { ResourceForm } from "../ui/resource-form";
 import { ResourceList } from "../ui/resource-list";
 
@@ -64,7 +66,7 @@ export default async function LibraryPage({
             <label className="search-field">
               <Icon name="search" size={18} />
               <span className="sr-only">Search the library</span>
-              <input
+              <SmoothInput
                 className="field"
                 type="search"
                 name="q"
@@ -73,32 +75,29 @@ export default async function LibraryPage({
                 maxLength={80}
               />
             </label>
-            <select
-              className="field"
+            <GlassSelect
+              className="library-filter"
+              ariaLabel="Group"
               name="group"
               defaultValue={groupId ?? ""}
-              aria-label="Group"
-            >
-              <option value="">All groups</option>
-              {active.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.courseCode} · {g.name}
-                </option>
-              ))}
-            </select>
-            <select
-              className="field"
+              options={[
+                { value: "", label: "All groups" },
+                ...active.map((g) => ({
+                  value: g.id,
+                  label: `${g.courseCode} · ${g.name}`,
+                })),
+              ]}
+            />
+            <GlassSelect
+              className="library-filter"
+              ariaLabel="Type"
               name="kind"
               defaultValue={kind ?? ""}
-              aria-label="Type"
-            >
-              <option value="">All types</option>
-              {RESOURCE_KINDS.map((k) => (
-                <option key={k.id} value={k.id}>
-                  {k.label}
-                </option>
-              ))}
-            </select>
+              options={[
+                { value: "", label: "All types" },
+                ...RESOURCE_KINDS.map((k) => ({ value: k.id, label: k.label })),
+              ]}
+            />
             <label className="check">
               <input
                 type="checkbox"

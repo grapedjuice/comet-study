@@ -256,7 +256,7 @@ describe("sessions, exams, library and the dashboard", () => {
 
     const outsiderDash = await loadDashboard(db, outsider, TERM);
     expect(outsiderDash.resources).toEqual([]);
-    expect(outsiderDash.actions.some((a) => a.kind === "find-group")).toBe(
+    expect(outsiderDash.actions.some((a) => a.kind === "find-groups")).toBe(
       true,
     );
   });

@@ -34,7 +34,7 @@ import {
   Seats,
 } from "../ui/bits";
 import { ActionForm, SubmitButton } from "../ui/forms";
-import { Icon } from "../ui/icons";
+import { Icon, type IconName } from "../ui/icons";
 import { FreeRoomsNow, RoomsSkeleton } from "../ui/free-rooms";
 import { RsvpControl, SessionCalendarLinks } from "../ui/session-bits";
 import { examTone } from "../ui/exam-bits";
@@ -198,7 +198,7 @@ export default async function DashboardPage() {
           className="needs-you"
         >
           {data.actions.length ? (
-            <ul className="action-list">
+            <ul className="item-group">
               {data.actions.map((action, index) => (
                 <ActionItem key={index} action={action} now={now} />
               ))}
@@ -468,136 +468,183 @@ export default async function DashboardPage() {
   );
 }
 
+/*
+ * "Needs you" rows follow the 21st.dev "The Item One" notification items: an
+ * icon tile, a title with an unread dot, one line of detail and a quiet
+ * right-hand meta; rows join into one outlined stack. Rows that only lead
+ * somewhere are links; rows that need an answer carry their buttons.
+ */
+function Row({
+  icon,
+  title,
+  detail,
+  meta,
+  unread = false,
+  href,
+  children,
+}: {
+  icon: IconName;
+  title: React.ReactNode;
+  detail?: React.ReactNode;
+  meta?: React.ReactNode;
+  unread?: boolean;
+  href?: string;
+  children?: React.ReactNode;
+}) {
+  const body = (
+    <>
+      <span className="item-media" aria-hidden="true">
+        <Icon name={icon} size={17} />
+      </span>
+      <span className="item-content">
+        <span className="item-title">
+          {title}
+          {unread ? (
+            <span className="item-dot" aria-label="Needs a reply" />
+          ) : null}
+        </span>
+        {detail ? <span className="item-detail">{detail}</span> : null}
+      </span>
+      {meta ? <span className="item-meta">{meta}</span> : null}
+      {href ? <Icon name="chevronRight" size={16} className="item-go" /> : null}
+    </>
+  );
+  return (
+    <li className="item">
+      {href ? (
+        <Link className="item-row" href={href}>
+          {body}
+        </Link>
+      ) : (
+        <div className="item-row">{body}</div>
+      )}
+      {children ? <div className="item-footer">{children}</div> : null}
+    </li>
+  );
+}
+
 function ActionItem({ action, now }: { action: Action; now: Date }) {
   switch (action.kind) {
     case "invite":
       return (
-        <li className="action-item tone-invite">
-          <p>
-            <strong>You’re invited</strong> to {action.groupName}{" "}
-            <CourseTag code={action.courseCode} />
-          </p>
-          <div className="action-buttons">
-            <ActionForm
-              action={joinGroupAction}
-              hidden={{ groupId: action.groupId }}
+        <Row
+          icon="groups"
+          unread
+          title={`Invite to ${action.groupName}`}
+          detail={`${action.courseCode} · a classmate added you`}
+        >
+          <ActionForm
+            action={joinGroupAction}
+            hidden={{ groupId: action.groupId }}
+          >
+            <SubmitButton
+              className="button primary small"
+              pendingLabel="Joining…"
             >
-              <SubmitButton
-                className="button primary small"
-                pendingLabel="Joining…"
-              >
-                Accept
-              </SubmitButton>
-            </ActionForm>
-            <ActionForm
-              action={leaveGroupAction}
-              hidden={{ groupId: action.groupId }}
-            >
-              <SubmitButton className="button ghost small">
-                Decline
-              </SubmitButton>
-            </ActionForm>
-          </div>
-        </li>
+              Accept
+            </SubmitButton>
+          </ActionForm>
+          <ActionForm
+            action={leaveGroupAction}
+            hidden={{ groupId: action.groupId }}
+          >
+            <SubmitButton className="button ghost small">Decline</SubmitButton>
+          </ActionForm>
+        </Row>
       );
     case "request":
       return (
-        <li className="action-item tone-request">
-          <p>
-            <strong>
-              {action.count} join {action.count === 1 ? "request" : "requests"}
-            </strong>{" "}
-            for {action.groupName}
-          </p>
-          <Link
-            className="button ghost small"
-            href={`/groups/${action.groupId}?tab=members`}
-          >
-            Review
-          </Link>
-        </li>
+        <Row
+          icon="bell"
+          unread
+          title={`${action.count} asking to join`}
+          detail={action.groupName}
+          href={`/groups/${action.groupId}?tab=members`}
+        />
       );
     case "rsvp":
       return (
-        <li className="action-item tone-rsvp">
-          <p>
-            <strong>RSVP:</strong> {action.title} ·{" "}
-            {formatRange(action.startsAt, action.endsAt)}
-          </p>
+        <Row
+          icon="calendar"
+          unread
+          title={action.title}
+          detail={`${action.groupName} · ${formatRange(action.startsAt, action.endsAt)}`}
+          meta={relativeDay(action.startsAt, now)}
+        >
           <RsvpControl sessionId={action.sessionId} current={null} compact />
-        </li>
+        </Row>
       );
     case "exam":
       return (
-        <li className="action-item tone-exam">
-          <p>
-            <strong>Confirm the date?</strong> {action.courseCode}{" "}
-            {action.label} · {formatDay(action.startsAt)} (
-            {relativeDay(action.startsAt, now)})
-          </p>
-          <div className="action-buttons">
-            <ActionForm
-              action={examStanceAction}
-              hidden={{ examId: action.examId }}
-            >
-              <SubmitButton
-                className="button ghost small"
-                name="stance"
-                value="confirm"
-              >
-                Looks right
-              </SubmitButton>{" "}
-              <SubmitButton
-                className="button ghost small"
-                name="stance"
-                value="dispute"
-              >
-                That’s wrong
-              </SubmitButton>
-            </ActionForm>
-          </div>
-        </li>
-      );
-    case "find-group":
-      return (
-        <li className="action-item tone-find">
-          <p>
-            <strong>Find a group for {action.courseCode}</strong>
-            {action.openGroups ? ` · ${action.openGroups} open` : ""}
-          </p>
-          <Link
-            className="button ghost small"
-            href={`/match?course=${encodeURIComponent(action.courseCode)}`}
+        <Row
+          icon="exam"
+          unread
+          title={`Is ${action.courseCode} ${action.label} right?`}
+          detail={`${formatDay(action.startsAt)} · a classmate reported it`}
+          meta={relativeDay(action.startsAt, now)}
+        >
+          <ActionForm
+            action={examStanceAction}
+            hidden={{ examId: action.examId }}
+            className="stance"
           >
-            Match me
-          </Link>
-        </li>
+            <SubmitButton className="rsvp-option" name="stance" value="confirm">
+              <Icon name="check" size={14} /> Confirm
+            </SubmitButton>
+            <SubmitButton className="rsvp-option" name="stance" value="dispute">
+              <Icon name="x" size={14} /> Dispute
+            </SubmitButton>
+          </ActionForm>
+        </Row>
+      );
+    case "find-groups":
+      return (
+        <Row
+          icon="search"
+          title={
+            action.courses.length === 1
+              ? `Find a group for ${action.courses[0].code}`
+              : `${action.courses.length} courses without a group`
+          }
+          detail={
+            action.courses.some((c) => c.openGroups)
+              ? `${action.courses.reduce((n, c) => n + c.openGroups, 0)} open groups to look at`
+              : "Start one and invite classmates"
+          }
+        >
+          <span className="item-chips">
+            {action.courses.map((course) => (
+              <Link
+                key={course.code}
+                className="chip-link"
+                href={`/match?course=${encodeURIComponent(course.code)}`}
+              >
+                {course.code}
+                {course.openGroups ? (
+                  <span className="chip-count">{course.openGroups}</span>
+                ) : null}
+              </Link>
+            ))}
+          </span>
+        </Row>
       );
     case "availability":
       return (
-        <li className="action-item tone-find">
-          <p>
-            <strong>Add when you’re free</strong> so matches can find
-            overlapping times
-          </p>
-          <Link className="button ghost small" href="/profile">
-            Set times
-          </Link>
-        </li>
+        <Row
+          icon="clock"
+          title="Add when you’re free"
+          detail="Matches rank by overlapping hours"
+          href="/profile"
+        />
       );
     case "first-session":
       return (
-        <li className="action-item tone-rsvp">
-          <p>
-            <strong>Plan the next meetup</strong> for {action.groupName}
-          </p>
-          <Link
-            className="button ghost small"
-            href={`/groups/${action.groupId}?tab=sessions`}
-          >
-            Schedule
-          </Link>
-        </li>
+        <Row
+          icon="plus"
+          title="Plan the next meetup"
+          detail={action.groupName}
+          href={`/groups/${action.groupId}?tab=sessions`}
+        />
       );
   }
 }

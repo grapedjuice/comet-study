@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
+import { SmoothInput } from "./smooth-input";
 
 export type UserCourse = {
   id: string;
@@ -300,7 +301,7 @@ export default function CoursesManager({
             <label className="field-label" htmlFor="course-search">
               Course code or title
             </label>
-            <input
+            <SmoothInput
               id="course-search"
               className="field"
               type="search"

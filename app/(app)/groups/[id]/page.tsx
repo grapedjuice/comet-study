@@ -46,7 +46,9 @@ import {
 import { Avatars, Badge, CourseTag, Empty, Panel, Seats } from "../../ui/bits";
 import { examTone } from "../../ui/exam-bits";
 import { ActionForm, ConfirmSubmit, SubmitButton } from "../../ui/forms";
+import { GlassSelect } from "../../ui/glass-select";
 import { Icon } from "../../ui/icons";
+import { SmoothInput, SmoothTextarea } from "../../../ui/smooth-input";
 import { ResourceForm } from "../../ui/resource-form";
 import { ResourceList } from "../../ui/resource-list";
 import { RsvpControl, SessionCalendarLinks } from "../../ui/session-bits";
@@ -510,23 +512,18 @@ export default async function GroupPage({
                 resetOnSuccess
               >
                 <div className="form-row">
-                  <label className="form-field">
-                    <span className="field-label">Type</span>
-                    <select
-                      className="field"
-                      name="kind"
-                      defaultValue="midterm"
-                    >
-                      {EXAM_KINDS.map((k) => (
-                        <option key={k.id} value={k.id}>
-                          {k.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                  <GlassSelect
+                    label="Type"
+                    name="kind"
+                    defaultValue="midterm"
+                    options={EXAM_KINDS.map((k) => ({
+                      value: k.id,
+                      label: k.label,
+                    }))}
+                  />
                   <label className="form-field grow">
                     <span className="field-label">Name</span>
-                    <input
+                    <SmoothInput
                       className="field"
                       name="label"
                       required
@@ -567,7 +564,7 @@ export default async function GroupPage({
                   <span className="field-label">
                     Room <em>optional</em>
                   </span>
-                  <input
+                  <SmoothInput
                     className="field"
                     name="location"
                     maxLength={80}
@@ -892,7 +889,7 @@ function SessionForm({ groupId, search }: { groupId: string; search: Search }) {
     >
       <label className="form-field">
         <span className="field-label">Title</span>
-        <input
+        <SmoothInput
           className="field"
           name="title"
           required
@@ -937,7 +934,7 @@ function SessionForm({ groupId, search }: { groupId: string; search: Search }) {
       </div>
       <label className="form-field">
         <span className="field-label">Where</span>
-        <input
+        <SmoothInput
           className="field"
           name="location"
           maxLength={120}
@@ -955,7 +952,7 @@ function SessionForm({ groupId, search }: { groupId: string; search: Search }) {
         <span className="field-label">
           Notes <em>optional</em>
         </span>
-        <textarea
+        <SmoothTextarea
           className="field"
           name="notes"
           rows={2}

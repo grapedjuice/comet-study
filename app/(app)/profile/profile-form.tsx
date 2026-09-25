@@ -11,6 +11,8 @@ import {
 } from "@/lib/study-options";
 import { saveProfileAction } from "../actions";
 import { ActionForm, ChipGroup, SubmitButton } from "../ui/forms";
+import { GlassSelect } from "../ui/glass-select";
+import { SmoothInput } from "../../ui/smooth-input";
 
 const HOURS = Array.from(
   { length: DAY_END_HOUR - DAY_START_HOUR },
@@ -71,7 +73,7 @@ export function ProfileForm({
         <div className="stack-form">
           <label className="form-field">
             <span className="field-label">Name classmates see</span>
-            <input
+            <SmoothInput
               className="field"
               name="name"
               defaultValue={name}
@@ -83,34 +85,24 @@ export function ProfileForm({
             </span>
           </label>
           <div className="form-row">
-            <label className="form-field">
-              <span className="field-label">Prefer to meet</span>
-              <select
-                className="field"
-                name="modality"
-                defaultValue={profile.modality}
-              >
-                {PROFILE_MODALITIES.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="form-field">
-              <span className="field-label">Ideal group size</span>
-              <select
-                className="field"
-                name="preferredSize"
-                defaultValue={String(profile.preferredSize)}
-              >
-                {[4, 5, 6, 7, 8].map((n) => (
-                  <option key={n} value={n}>
-                    {n} people
-                  </option>
-                ))}
-              </select>
-            </label>
+            <GlassSelect
+              label="Prefer to meet"
+              name="modality"
+              defaultValue={profile.modality}
+              options={PROFILE_MODALITIES.map((m) => ({
+                value: m.id,
+                label: m.label,
+              }))}
+            />
+            <GlassSelect
+              label="Ideal group size"
+              name="preferredSize"
+              defaultValue={String(profile.preferredSize)}
+              options={[4, 5, 6, 7, 8].map((n) => ({
+                value: String(n),
+                label: `${n} people`,
+              }))}
+            />
           </div>
           <ChipGroup
             name="styles"

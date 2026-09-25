@@ -26,10 +26,8 @@ export type Action =
       startsAt: Date;
     }
   | {
-      kind: "find-group";
-      courseCode: string;
-      courseTitle: string;
-      openGroups: number;
+      kind: "find-groups";
+      courses: { code: string; openGroups: number }[];
     }
   | { kind: "availability" }
   | { kind: "first-session"; groupId: string; groupName: string };
@@ -98,16 +96,17 @@ export async function loadDashboard(
         startsAt: e.startsAt,
       });
   const groupedCourses = new Set(active.map((g) => g.courseCode));
-  for (const c of courses)
-    if (!groupedCourses.has(c.code))
-      actions.push({
-        kind: "find-group",
-        courseCode: c.code,
-        courseTitle: c.title,
-        openGroups: openGroups.filter(
-          (g) => g.courseCode === c.code && g.memberCount < g.capacity,
-        ).length,
-      });
+  const ungrouped = courses
+    .filter((c) => !groupedCourses.has(c.code))
+    .map((c) => ({
+      code: c.code,
+      openGroups: openGroups.filter(
+        (g) => g.courseCode === c.code && g.memberCount < g.capacity,
+      ).length,
+    }));
+  // One row for every course still without a group, not one card each.
+  if (ungrouped.length)
+    actions.push({ kind: "find-groups", courses: ungrouped });
   if (!profile.availability.length) actions.push({ kind: "availability" });
   for (const g of active)
     if (!g.nextSession && g.myRole === "owner")

@@ -11,6 +11,10 @@ import { useEffect, useRef } from "react";
 const TRAIL = 26;
 const INTERACTIVE = "a, button, [role='button'], summary, label";
 const TEXT = "input, textarea, [contenteditable='true']";
+// Controls that open OS-drawn popups (pickers, file dialogs). While one is
+// open the page gets no pointer events, so the comet would freeze in place.
+const NATIVE_POPUP =
+  "select, input[type='date'], input[type='time'], input[type='datetime-local'], input[type='month'], input[type='week'], input[type='color'], input[type='file'], .dropzone";
 
 export default function CometCursor() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -72,7 +76,12 @@ export default function CometCursor() {
       visible = false;
       wake();
     };
-    const down = () => {
+    const down = (event: PointerEvent) => {
+      // Hide until the pointer moves again, i.e. once the popup has closed.
+      if ((event.target as Element | null)?.closest?.(NATIVE_POPUP)) {
+        leave();
+        return;
+      }
       pressed = true;
       wake();
     };

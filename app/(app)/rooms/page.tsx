@@ -24,6 +24,7 @@ import {
   TZ_LABEL,
 } from "@/lib/time";
 import { Badge, Empty, PageHeader, Panel } from "../ui/bits";
+import { GlassSelect } from "../ui/glass-select";
 import { Icon } from "../ui/icons";
 
 export const metadata: Metadata = { title: "Find a room — Comet Study" };
@@ -127,20 +128,20 @@ export default async function RoomsPage({
 
       <form className="room-search panel" action="/rooms" method="get">
         {group ? <input type="hidden" name="group" value={group.id} /> : null}
-        <label className="form-field">
-          <span className="field-label">Day</span>
-          <select className="field" name="date" defaultValue={date}>
-            {dates.map((d) => (
-              <option key={d} value={d}>
-                {d === today
-                  ? "Today"
-                  : d === addDays(today, 1)
-                    ? "Tomorrow"
-                    : formatDay(campusToUtc(d, "12:00")!)}
-              </option>
-            ))}
-          </select>
-        </label>
+        <GlassSelect
+          label="Day"
+          name="date"
+          defaultValue={date}
+          options={dates.map((d) => ({
+            value: d,
+            label:
+              d === today
+                ? "Today"
+                : d === addDays(today, 1)
+                  ? "Tomorrow"
+                  : formatDay(campusToUtc(d, "12:00")!),
+          }))}
+        />
         <label className="form-field">
           <span className="field-label">From</span>
           <input
@@ -165,37 +166,31 @@ export default async function RoomsPage({
             defaultValue={hhmm(to)}
           />
         </label>
-        <label className="form-field">
-          <span className="field-label">Building</span>
-          <select
-            className="field"
-            name="building"
-            defaultValue={building ?? ""}
-          >
-            <option value="">Anywhere</option>
-            {buildings.map((b) => (
-              <option key={b.code} value={b.code}>
-                {b.code}
-                {b.name ? ` — ${b.name}` : ""}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="form-field">
-          <span className="field-label">Seats</span>
-          <select
-            className="field"
-            name="cap"
-            defaultValue={String(minCapacity)}
-          >
-            <option value="0">Any size</option>
-            {[4, 8, 15, 30].map((n) => (
-              <option key={n} value={n}>
-                {n}+ seats
-              </option>
-            ))}
-          </select>
-        </label>
+        <GlassSelect
+          label="Building"
+          name="building"
+          defaultValue={building ?? ""}
+          options={[
+            { value: "", label: "Anywhere" },
+            ...buildings.map((b) => ({
+              value: b.code,
+              label: b.code,
+              hint: b.name ?? undefined,
+            })),
+          ]}
+        />
+        <GlassSelect
+          label="Seats"
+          name="cap"
+          defaultValue={String(minCapacity)}
+          options={[
+            { value: "0", label: "Any size" },
+            ...[4, 8, 15, 30].map((n) => ({
+              value: String(n),
+              label: `${n}+ seats`,
+            })),
+          ]}
+        />
         <button className="button primary" type="submit">
           <Icon name="search" size={18} /> <span>Search</span>
         </button>
