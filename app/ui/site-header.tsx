@@ -110,8 +110,8 @@ export default function SiteHeader() {
               {signingOut ? "Signing out…" : "Sign out"}
             </button>
           ) : null}
-          <Link className="nav-cta" href={signedIn ? "/account" : "/sign-in"}>
-            {signedIn ? "Your table" : "Sign in"}
+          <Link className="nav-cta" href={signedIn ? "/dashboard" : "/sign-in"}>
+            {signedIn ? "Dashboard" : "Sign in"}
           </Link>
         </nav>
       </div>

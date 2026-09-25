@@ -39,6 +39,13 @@ const nextConfig: NextConfig = {
   // Lets Cloudflare quick tunnels (`cloudflared tunnel --url ...`) load the
   // dev server for previews on other devices. Dev-only; ignored in builds.
   allowedDevOrigins: ["*.trycloudflare.com"],
+  experimental: {
+    serverActions: {
+      // Library uploads: 4 MB files plus form overhead, under Vercel's 4.5 MB.
+      bodySizeLimit: "4.4mb",
+      allowedOrigins: isDev ? ["*.trycloudflare.com"] : [],
+    },
+  },
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];
   },

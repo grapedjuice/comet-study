@@ -1,14 +1,9 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { connection } from "next/server";
-import {
-  countClassmates,
-  currentTerm,
-  listUserCourses,
-  termLabel,
-} from "../lib/courses";
-import { currentUserContext } from "../lib/request-context";
+import { currentUserContext } from "../../lib/request-context";
 import { StudyDemo } from "./study-demo";
-import Marquee from "./ui/marquee";
+import Marquee from "../ui/marquee";
 import {
   BlurText,
   FadeUp,
@@ -17,7 +12,7 @@ import {
   StackingCard,
   StackingCards,
   TiltPanel,
-} from "./ui/motion";
+} from "../ui/motion";
 
 const marqueeCourses = [
   "CS 2336",
@@ -134,17 +129,9 @@ async function loadViewer() {
   // try below, or the prerender bailout would be swallowed.
   await connection();
   try {
-    const { db, user } = await currentUserContext();
+    const { user } = await currentUserContext();
     if (!user) return null;
-    if (!user.onboardingCompletedAt) return { pending: true as const };
-    const term = currentTerm();
-    return {
-      pending: false as const,
-      name: user.name ?? user.email.split("@")[0],
-      term: termLabel(term),
-      courses: await listUserCourses(db, user.id, term),
-      classmates: await countClassmates(db, user.id, term),
-    };
+    return { pending: !user.onboardingCompletedAt };
   } catch {
     return null; // Anonymous landing page when the database isn't reachable.
   }
@@ -152,20 +139,14 @@ async function loadViewer() {
 
 export default async function HomePage() {
   const viewer = await loadViewer();
-  const me = viewer && !viewer.pending ? viewer : null;
-  const first = me?.name.split(" ")[0];
-  const classmates = me?.classmates ?? 0;
+  // Signed-in students live on their dashboard; the landing page is for guests.
+  if (viewer && !viewer.pending) redirect("/dashboard");
   return (
     <main id="main" tabIndex={-1}>
       <section className="hero" aria-labelledby="hero-title">
         <div className="hero-copy">
           <FadeUp>
-            {me ? (
-              <p className="eyebrow-pill">
-                <span className="pulse" aria-hidden="true" /> Welcome back,{" "}
-                {first}
-              </p>
-            ) : viewer?.pending ? (
+            {viewer?.pending ? (
               <Link className="eyebrow-pill" href="/welcome">
                 <span className="pulse" aria-hidden="true" /> Finish setting up
                 your study table →
@@ -186,49 +167,29 @@ export default async function HomePage() {
           </h1>
           <FadeUp delay={0.55}>
             <p className="hero-description">
-              {me
-                ? `You’re taking ${me.courses.length} course${me.courses.length === 1 ? "" : "s"} this ${me.term}. ${
-                    classmates
-                      ? `${classmates} classmate${classmates === 1 ? " has" : "s have"} joined so far — your study table is below.`
-                      : "Your study table is below — invite a classmate to start your first group."
-                  }`
-                : "A familiar face makes a hard class feel lighter. Find classmates, make a plan, and turn studying into something you do together."}
+              A familiar face makes a hard class feel lighter. Find classmates,
+              make a plan, and turn studying into something you do together.
             </p>
           </FadeUp>
           <FadeUp delay={0.7} className="hero-actions">
-            {me ? (
-              <Link className="button primary" href="/account">
-                Manage my courses <span aria-hidden="true">→</span>
-              </Link>
-            ) : (
-              <Link className="button primary" href="/sign-in">
-                Find my study group <span aria-hidden="true">→</span>
-              </Link>
-            )}
+            <Link className="button primary" href="/sign-in">
+              Find my study group <span aria-hidden="true">→</span>
+            </Link>
             <a className="button ghost" href="#how-it-works">
               See how it works
             </a>
           </FadeUp>
           <FadeUp delay={0.85}>
             <p className="access-note">
-              {me ? (
-                <>
-                  {me.term} <span aria-hidden="true">·</span>{" "}
-                  {me.courses.map((course) => course.code).join(" · ")}
-                </>
-              ) : (
-                <>
-                  For UT Dallas students <span aria-hidden="true">·</span> Free{" "}
-                  <span aria-hidden="true">·</span> Try the preview below
-                </>
-              )}
+              <>
+                For UT Dallas students <span aria-hidden="true">·</span> Free{" "}
+                <span aria-hidden="true">·</span> Try the preview below
+              </>
             </p>
           </FadeUp>
         </div>
         <TiltPanel className="hero-product">
-          <StudyDemo
-            personal={me ? { name: me.name, courses: me.courses } : undefined}
-          />
+          <StudyDemo />
         </TiltPanel>
       </section>
 

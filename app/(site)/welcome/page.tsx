@@ -6,8 +6,8 @@ import {
   listUserCourses,
   termLabel,
   type UserCourse,
-} from "../../lib/courses";
-import { currentUserContext } from "../../lib/request-context";
+} from "../../../lib/courses";
+import { currentUserContext } from "../../../lib/request-context";
 import Onboarding from "./onboarding";
 
 export const metadata: Metadata = { title: "Welcome — Comet Study" };
@@ -25,7 +25,7 @@ export default async function WelcomePage() {
     user = null;
   }
   if (!user) redirect("/sign-in");
-  if (user.onboardingCompletedAt) redirect("/");
+  if (user.onboardingCompletedAt) redirect("/dashboard");
 
   return (
     <main id="main" className="welcome-page" tabIndex={-1}>

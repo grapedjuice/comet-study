@@ -203,12 +203,59 @@ test("signed-in pages render per request, not from the build", async ({
     { name: SESSION_COOKIE, value: raw, url: baseURL! },
   ]);
   await page.goto("/");
-  await expect(page.getByText(/Welcome back,\s*Taylor/)).toBeVisible();
+  await expect(page).toHaveURL(/\/dashboard$/);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Taylor");
   await page.goto("/account");
-  await expect(page).toHaveURL(/\/account$/);
+  await expect(page).toHaveURL(/\/courses$/);
+  await page.goto("/profile");
   await expect(page.getByText(`Signed in as ${email}`)).toBeVisible();
   await page.goto("/welcome");
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/dashboard$/);
+});
+
+test("signed-in app pages meet automated accessibility checks @a11y", async ({
+  page,
+  context,
+  baseURL,
+}) => {
+  const db = createDatabaseClient(process.env.DATABASE_URL!);
+  const { raw, digest } = issueToken();
+  const email = `a11y.${Date.now()}.${test.info().project.name}@utdallas.edu`;
+  try {
+    const user = await db.pool.query<{ id: string }>(
+      "insert into users (email_normalized, name, email_verified_at, onboarding_completed_at) values ($1, 'Robin Vale', now(), now()) returning id",
+      [email],
+    );
+    await db.pool.query(
+      "insert into sessions_auth (user_id, token_hash, expires_at) values ($1, $2, now() + interval '1 hour')",
+      [user.rows[0].id, digest],
+    );
+  } finally {
+    await db.close();
+  }
+  await context.addCookies([
+    { name: SESSION_COOKIE, value: raw, url: baseURL! },
+  ]);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  for (const path of [
+    "/dashboard",
+    "/calendar",
+    "/calendar?view=month",
+    "/groups",
+    "/groups/new",
+    "/match",
+    "/rooms",
+    "/library",
+    "/courses",
+    "/profile",
+  ]) {
+    await page.goto(path);
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    const result = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
+      .analyze();
+    expect(result.violations, path).toEqual([]);
+  }
 });
 
 test("responses carry security headers", async ({ request }) => {

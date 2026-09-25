@@ -42,6 +42,36 @@ const Professor = z.object({
   last_name: z.string().nullish(),
 });
 
+const BuildingRooms = z.object({
+  building: z.string(),
+  rooms: z.array(
+    z.object({ room: z.string(), capacity: z.number().nullish() }),
+  ),
+});
+export type NebulaBuildingRooms = z.infer<typeof BuildingRooms>;
+
+// Event fields differ per feed; keep them loose and normalize in lib/rooms.
+const DayEvents = z.object({
+  buildings: z
+    .array(
+      z.object({
+        building: z.string(),
+        rooms: z
+          .array(
+            z.object({
+              room: z.string(),
+              events: z.array(z.record(z.string(), z.unknown())).nullish(),
+            }),
+          )
+          .nullish(),
+      }),
+    )
+    .nullish(),
+});
+export type NebulaDayBuildings = NonNullable<
+  z.infer<typeof DayEvents>["buildings"]
+>;
+
 export class NebulaError extends Error {
   constructor(readonly status: number) {
     super("NEBULA_UNAVAILABLE");
@@ -101,6 +131,22 @@ export function createNebulaClient(
         ),
         Section,
       );
+    },
+    /** Room inventory: building → rooms with capacity (0 means unknown). */
+    async rooms() {
+      return each(
+        await get("/rooms", z.array(z.unknown()), 20_000),
+        BuildingRooms,
+      );
+    },
+    /**
+     * One day of room occupancy from a feed: CourseBook class meetings
+     * ("events"), Ad Astra academic reservations ("astra") or Mazevo
+     * Student Union reservations ("mazevo"). `date` is "YYYY-MM-DD".
+     */
+    async roomEvents(feed: "events" | "astra" | "mazevo", date: string) {
+      const day = await get(`/${feed}/${date}`, DayEvents, 20_000);
+      return day?.buildings ?? [];
     },
     async professorName(id: string) {
       if (professorNames.has(id)) return professorNames.get(id) ?? null;

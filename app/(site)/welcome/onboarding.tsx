@@ -3,7 +3,7 @@
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useCallback, useState } from "react";
-import CoursesManager, { type UserCourse } from "../account/courses-manager";
+import CoursesManager, { type UserCourse } from "../../ui/courses-manager";
 
 const STEPS = ["Your name", "Your courses", "Ready"] as const;
 
@@ -65,7 +65,7 @@ export default function Onboarding({
       const payload = await response.json();
       if (!response.ok)
         throw new Error(payload.error?.message ?? "Couldn’t finish setup");
-      router.push("/");
+      router.push("/dashboard");
       router.refresh();
     } catch (caught) {
       setError((caught as Error).message);

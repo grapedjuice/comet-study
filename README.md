@@ -6,6 +6,20 @@ A private, course-aware study companion for UT Dallas students. Independent stud
 
 Active implementation under the supplied production-build specification. **Not production ready.** See [build status](docs/build-status.md) for accepted modules, evidence, and remaining gates. No live integrations or deployment have been verified.
 
+## The signed-in app
+
+Signed-in students land on `/dashboard` (the landing page is for guests). The app shell links to:
+
+- **Home** (`/dashboard`): the next session with RSVP, a "needs you" list (invites, join requests, RSVPs, exam confirmations, courses without a group), the next 7 days, rooms free right now, groups, courses, exams and recent library uploads.
+- **Calendar** (`/calendar`): week and month views of class meetings (from section schedules), group sessions and exams; `.ics` export.
+- **Groups** (`/groups`, `/groups/new`, `/groups/[id]`): join, request, invite, approve; each group has Overview, Sessions, Library, Exams, Members and Settings.
+- **Find matches** (`/match`): groups and classmates ranked by shared free time, study style and goals (deterministic, versioned score; reasons never reveal schedules).
+- **Rooms** (`/rooms`): free rooms from Nebula's CourseBook, Ad Astra and Mazevo feeds, with the availability disclaimer.
+- **Library** (`/library`): files (4 MB, magic-byte checked, stored in Postgres) and links shared inside groups; only active members can download.
+- **Courses** and **Profile** (`/courses`, `/profile`): courses, name, study style, goals and a weekly availability grid.
+
+Mutations are Server Actions in `app/(app)/actions.ts`; domain logic lives in `lib/`.
+
 ## Architecture and contributing
 
 Next.js App Router, TypeScript, PostgreSQL, Drizzle, Zod, Vitest, Playwright. Never supply real student data or secrets in issues or source control.

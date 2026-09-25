@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { FadeUp } from "../ui/motion";
+import { FadeUp } from "../../ui/motion";
 
 export default function VerifyPage() {
   const router = useRouter();
@@ -55,7 +55,10 @@ export default function VerifyPage() {
         );
       setState("done");
       const needsOnboarding = payload.data?.onboardingRequired !== false;
-      setTimeout(() => router.replace(needsOnboarding ? "/welcome" : "/"), 900);
+      setTimeout(
+        () => router.replace(needsOnboarding ? "/welcome" : "/dashboard"),
+        900,
+      );
     } catch (error) {
       setState("error");
       setMessage(

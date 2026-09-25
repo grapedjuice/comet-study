@@ -2,7 +2,7 @@ import { resolve } from "node:path";
 import { readMigrationFiles } from "drizzle-orm/migrator";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
-import { Pool } from "pg";
+import { Pool, type PoolClient } from "pg";
 
 export function createDatabaseClient(url: string) {
   const pool = new Pool({
@@ -59,4 +59,25 @@ export async function runMigrations(
   db: ReturnType<typeof createDatabaseClient>,
 ) {
   await migrate(drizzle(db.pool), { migrationsFolder });
+}
+
+type Client = PoolClient;
+
+/** Run `work` in one transaction on one connection; rolls back on throw. */
+export async function transaction<T>(
+  db: Database,
+  work: (client: Client) => Promise<T>,
+) {
+  const client = await db.pool.connect();
+  try {
+    await client.query("begin");
+    const result = await work(client);
+    await client.query("commit");
+    return result;
+  } catch (error) {
+    await client.query("rollback");
+    throw error;
+  } finally {
+    client.release();
+  }
 }

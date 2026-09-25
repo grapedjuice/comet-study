@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { type FormEvent, useState } from "react";
-import { BlurText, FadeUp } from "../ui/motion";
+import { BlurText, FadeUp } from "../../ui/motion";
 
 export default function SignInPage() {
   const [email, setEmail] = useState("");
