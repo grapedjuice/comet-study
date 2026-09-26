@@ -39,12 +39,25 @@ const CODE = new RegExp(
 const SECTION_LABEL = new RegExp(String.raw`SECTION\s*[:#-]?\s*${SECTION}\b`);
 // Orion tables list "Class Nbr" (5 digits) followed by the section column.
 const CLASS_NBR_SECTION = new RegExp(String.raw`\b\d{5}\s+${SECTION}\b`);
+// Orion's "View My Classes" names each component "<section> <component> -
+// <class nbr>": "002 Lecture - 84582", "303 Laboratory - No Lab Fee - 84191".
+const COMPONENT_SECTION = new RegExp(
+  String.raw`(?:^|\s)${SECTION}\s+(LECTURE|LABORATORY|LAB|SEMINAR|DISCUSSION|RECITATION|STUDIO|PRACTICUM|INTERNSHIP|INDEPENDENT STUDY|RESEARCH|THESIS|DISSERTATION|CLINICAL|FIELD ?WORK|TUTORIAL)\b[^\n]*?-\s*\d{5}\b`,
+  "g",
+);
+
+/** The lecture's section when a course lists several components. */
+function componentSection(text: string) {
+  const rows = [...text.matchAll(COMPONENT_SECTION)];
+  return (rows.find((row) => row[2] === "LECTURE") ?? rows[0])?.[1] ?? null;
+}
 
 /**
  * Pull course codes (and sections when present) out of pasted schedule text:
- * Orion "My Class Schedule", Schedule Planner, CourseBook or a transcript.
- * Handles "CS 2336.002", "CS2336-002", "CS 2336 - Computer Science II …
- * Section 002". Candidates still need checking against the catalog.
+ * Orion "My Class Schedule" or "View My Classes", Schedule Planner,
+ * CourseBook or a transcript. Handles "CS 2336.002", "CS2336-002",
+ * "CS 2336 - Computer Science II … Section 002" and "002 Lecture - 84582".
+ * Candidates still need checking against the catalog.
  */
 export function extractCourseCodes(text: string) {
   const upper = text.toUpperCase();
@@ -59,6 +72,7 @@ export function extractCourseCodes(text: string) {
       const tail = upper.slice(end, Math.min(next, end + 400));
       section =
         tail.match(SECTION_LABEL)?.[1] ??
+        componentSection(tail) ??
         tail.match(CLASS_NBR_SECTION)?.[1] ??
         null;
     }

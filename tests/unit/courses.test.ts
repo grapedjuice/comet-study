@@ -41,6 +41,56 @@ Class Nbr Section Component
     ]);
   });
 
+  it("reads Orion's 'View My Classes' component tables", () => {
+    // Copied from Orion's By Class view: each component row starts with
+    // "<section> <component> - <class number>".
+    const orion = `By Class	By Date
+Printable Page
+Show Enrolled Classes	Show Waitlisted Classes	Show Dropped Classes
+EE 2301 ELECTRICAL NETWORK ANALYSIS
+Class Details - EE 2301
+1 row
+Status	Units	Grading Basis	Grade	Academic Program	Requirement Designation
+Enrolled	3.00	Graded - Undergraduate Courses		Undergraduate
+Component Details - EE 2301
+1 row
+Class	Instruction Mode	Session	Meeting Dates	Days and Times	Room
+002 Lecture - 84582	Face-to-Face	1	08/24/2026 - 12/09/2026
+Days: Tuesday Thursday
+
+Times: 11:30AM to 12:45PM
+	ECSW 3.210
+Enrollment Deadlines	Exam Schedule
+EE 2310 INTRODUCTION TO DIGITAL SYSTEM
+Class Details - EE 2310
+1 row
+Status	Units	Grading Basis	Grade	Academic Program	Requirement Designation
+Enrolled	3.00	Graded - Undergraduate Courses		Undergraduate
+Component Details - EE 2310
+3 rows
+Class	Instruction Mode	Session	Meeting Dates	Days and Times	Room
+303 Laboratory - No Lab Fee - 84191	Face-to-Face	1	08/24/2026 - 12/09/2026
+Days: Friday
+
+Times: 2:30PM to 3:45PM
+	ECSN 2.110
+002 Lecture - 82859	Face-to-Face	1	08/24/2026 - 12/09/2026
+Days: Tuesday Thursday
+
+Times: 10:00AM to 11:15AM
+	FN 2.202
+EE 3161 SOCIAL ISSUES AND ETHICS IN ENGINEERING
+Component Details - EE 3161
+Class	Instruction Mode	Session	Meeting Dates	Days and Times	Room
+0W1 Lecture - 85012	Online	1	08/24/2026 - 12/09/2026`;
+    expect(extractCourseCodes(orion)).toEqual([
+      // The lecture's section, not the lab's.
+      { code: "EE 2301", section: "002" },
+      { code: "EE 2310", section: "002" },
+      { code: "EE 3161", section: "0W1" },
+    ]);
+  });
+
   it("reads Schedule Planner / CourseBook section codes", () => {
     expect(
       extractCourseCodes("cs2336.002, PHYS 2325-003 and ECS 2390 HN1; CS 4V98"),
