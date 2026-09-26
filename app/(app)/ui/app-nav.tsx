@@ -135,6 +135,7 @@ export default function AppNav({
               onClick={() => setMore(false)}
               aria-current={active ? "page" : undefined}
             >
+              {active ? <TabbarActive /> : null}
               <Icon name={item.icon} size={22} />
               <span>{item.label}</span>
             </Link>
@@ -147,6 +148,9 @@ export default function AppNav({
           aria-controls="more-sheet"
           onClick={() => setMore((open) => !open)}
         >
+          {extra.some((item) => isActive(pathname, item.href)) ? (
+            <TabbarActive />
+          ) : null}
           <Icon name="more" size={22} />
           <span>More</span>
         </button>
@@ -202,5 +206,17 @@ export default function AppNav({
         ) : null}
       </AnimatePresence>
     </>
+  );
+}
+
+/** The mobile tab bar's highlight; it slides to whichever tab is current. */
+function TabbarActive() {
+  return (
+    <motion.span
+      layoutId="tabbar-active"
+      className="tabbar-active"
+      aria-hidden="true"
+      transition={{ type: "spring", stiffness: 460, damping: 34 }}
+    />
   );
 }

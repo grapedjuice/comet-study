@@ -229,8 +229,20 @@
     text-decoration: none;
     cursor: pointer;
   }
+  .tab-link {
+    position: relative;
+    isolation: isolate;
+  }
   .tab-link.is-active {
     color: #fff;
+  }
+  .tabbar-active {
+    position: absolute;
+    inset: 3px 6px;
+    z-index: -1;
+    border-radius: 14px;
+    background: var(--pill-bg);
+    box-shadow: var(--pill-shadow);
   }
   .tab-link.is-active .icon {
     color: var(--sky);
@@ -610,18 +622,81 @@ textarea.field {
   outline: 2px solid var(--sky);
   outline-offset: 2px;
 }
+/* A checkbox as a toggle chip: the whole pill lights up when it's on. */
 .check {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 16px 0 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.35);
   color: var(--muted);
   font-size: 14px;
+  font-weight: 500;
   white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    border-color 0.25s,
+    background 0.25s,
+    color 0.2s,
+    box-shadow 0.25s;
+}
+.check:hover {
+  border-color: rgba(169, 155, 255, 0.45);
+  color: var(--ink);
+}
+.check:has(input:checked) {
+  border-color: rgba(169, 155, 255, 0.55);
+  background: linear-gradient(
+    120deg,
+    rgba(125, 107, 255, 0.28),
+    rgba(67, 197, 232, 0.12)
+  );
+  color: #fff;
+  box-shadow: 0 6px 22px rgba(110, 100, 255, 0.22);
+}
+.check:has(input:focus-visible) {
+  box-shadow: 0 0 0 4px rgba(139, 123, 255, 0.25);
 }
 .check input {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--indigo);
+  appearance: none;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  border: 1.5px solid rgba(255, 255, 255, 0.28);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  transition:
+    background 0.25s,
+    border-color 0.25s,
+    transform 0.25s var(--ease);
+}
+.check input::after {
+  content: "";
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5 10 17 19 7'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  transform: scale(0);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.check input:checked {
+  border-color: transparent;
+  background: var(--grad-btn);
+}
+.check input:checked::after {
+  transform: scale(1);
+}
+.check:active input {
+  transform: scale(0.9);
 }
 .switch {
   position: relative;
@@ -696,9 +771,31 @@ textarea.field {
   text-decoration: none;
   cursor: pointer;
 }
+.segmented > * {
+  position: relative;
+  isolation: isolate;
+}
 .segmented > .is-on {
-  background: rgba(255, 255, 255, 0.1);
   color: #fff;
+}
+/* The highlight behind the active segment or tab; it slides between them. */
+.seg-pill {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--pill-bg);
+  box-shadow: var(--pill-shadow);
+}
+.mode-panels {
+  display: grid;
+  min-width: 0;
+}
+.mode-panel {
+  overflow: hidden;
+  /* Room for focus rings, which overflow would otherwise clip. */
+  margin: -4px;
+  padding: 4px;
 }
 /* Full-width in the share form, so the two options split it evenly. */
 .resource-form .segmented {
@@ -1271,6 +1368,7 @@ a.item-row:hover .item-go {
 }
 .picker-pop {
   position: fixed;
+  overflow: hidden;
   z-index: 90;
   padding: 12px;
   border: 1px solid var(--line-strong);
@@ -2011,12 +2109,11 @@ a.item-row:hover .item-go {
 .tab:hover {
   color: var(--ink);
 }
+.tab {
+  position: relative;
+  isolation: isolate;
+}
 .tab.is-on {
-  background: linear-gradient(
-    120deg,
-    rgba(125, 107, 255, 0.35),
-    rgba(67, 197, 232, 0.16)
-  );
   color: #fff;
 }
 .tab-count {
@@ -2471,17 +2568,121 @@ a.item-row:hover .item-go {
   justify-items: end;
   gap: 8px;
 }
+.score-details {
+  position: relative;
+  align-self: start;
+}
 .score {
   position: relative;
   display: grid;
   place-items: center;
   width: 60px;
   height: 60px;
+  list-style: none;
+  cursor: pointer;
+}
+.score::-webkit-details-marker {
+  display: none;
+}
+.score:focus-visible {
+  outline: none;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(139, 123, 255, 0.55);
 }
 .score svg {
   position: absolute;
   inset: 0;
+  /* The glow spills past the ring; let it, instead of squaring it off. */
+  overflow: visible;
   transform: rotate(-90deg);
+}
+.score small {
+  position: absolute;
+  top: calc(100% + 5px);
+  color: var(--faint);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: color 0.2s;
+}
+.score:hover small,
+.score-details[open] .score small {
+  color: var(--sky);
+}
+/* How the number is made (opens from the ring). */
+.score-pop {
+  position: absolute;
+  top: calc(100% + 26px);
+  left: 0;
+  z-index: 30;
+  width: min(300px, calc(100vw - 48px));
+  padding: 14px 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: 18px;
+  background: rgba(14, 16, 34, 0.97);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(20px) saturate(140%);
+  transform-origin: 30px top;
+  animation: score-pop-in 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes score-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.96);
+  }
+}
+.score-pop-head {
+  margin-bottom: 10px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.score-pop-head strong {
+  color: #fff;
+  font-size: 18px;
+}
+.score-pop ul {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.score-pop li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 64px 40px;
+  align-items: center;
+  gap: 10px;
+  font-size: 12.5px;
+}
+.score-pop li span {
+  color: var(--ink);
+}
+.score-pop li i {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+.score-pop li b {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #43c5e8, var(--teal));
+}
+.score-pop li em {
+  color: var(--muted);
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.score-pop-note {
+  margin-top: 10px;
+  color: var(--faint);
+  font-size: 12px;
+  line-height: 1.45;
 }
 .score circle {
   fill: none;
@@ -2779,6 +2980,91 @@ a.item-row:hover .item-go {
   background: var(--comet);
 }
 /* The agenda is the accessible week; it's the visible one on small screens. */
+/* ---------- Calendar zoom (week ⇄ month view transitions) ---------- */
+/* Wrappers the transitions snapshot; they keep the page grid's spacing. */
+.cal-stage,
+.tab-stage {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+.cal-title {
+  display: inline-block;
+}
+/* Week → month: the camera pulls back from the week's row. */
+::view-transition-old(.cal-out) {
+  animation: 380ms cubic-bezier(0.4, 0, 0.6, 1) both cal-recede;
+}
+::view-transition-new(.cal-out) {
+  animation: 560ms cubic-bezier(0.22, 1, 0.36, 1) 40ms both cal-settle;
+}
+/* Month → week: it pushes in on that row. */
+::view-transition-old(.cal-in) {
+  animation: 380ms cubic-bezier(0.4, 0, 0.6, 1) both cal-rush;
+}
+::view-transition-new(.cal-in) {
+  animation: 560ms cubic-bezier(0.22, 1, 0.36, 1) 40ms both cal-emerge;
+}
+@keyframes cal-recede {
+  to {
+    opacity: 0;
+    filter: blur(6px);
+    transform: scale(0.7);
+  }
+}
+@keyframes cal-settle {
+  from {
+    opacity: 0;
+    filter: blur(8px);
+    transform: scale(1.3);
+  }
+}
+@keyframes cal-rush {
+  to {
+    opacity: 0;
+    filter: blur(8px);
+    transform: scale(1.3);
+  }
+}
+@keyframes cal-emerge {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+    transform: scale(0.7);
+  }
+}
+/* The zoom happens inside the calendar's frame, never over the sidebar. */
+::view-transition-image-pair(.cal-in),
+::view-transition-image-pair(.cal-out) {
+  overflow: clip;
+  border-radius: 26px;
+}
+/* Zoom around the week's row: six equal rows under a thin weekday header. */
+::view-transition-old(.r0),
+::view-transition-new(.r0) {
+  transform-origin: 50% 14%;
+}
+::view-transition-old(.r1),
+::view-transition-new(.r1) {
+  transform-origin: 50% 30%;
+}
+::view-transition-old(.r2),
+::view-transition-new(.r2) {
+  transform-origin: 50% 45%;
+}
+::view-transition-old(.r3),
+::view-transition-new(.r3) {
+  transform-origin: 50% 61%;
+}
+::view-transition-old(.r4),
+::view-transition-new(.r4) {
+  transform-origin: 50% 76%;
+}
+::view-transition-old(.r5),
+::view-transition-new(.r5) {
+  transform-origin: 50% 92%;
+}
+
 .week-agenda {
   position: absolute;
   width: 1px;
@@ -2802,92 +3088,327 @@ a.item-row:hover .item-go {
     background: var(--glass-strong);
   }
 }
+/* ---------- Month view ---------- */
+/* The grid lines are the grid's own background showing through 1px gaps;
+   a spotlight under the cursor (SpotlightGroup sets --mx/--my) lights them. */
 .month-grid {
+  --mx: -400px;
+  --my: -400px;
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 1px;
   padding: 0;
   overflow: hidden;
-  background: var(--line);
+  background:
+    radial-gradient(
+      260px circle at var(--mx) var(--my),
+      rgba(139, 123, 255, 0.7),
+      rgba(108, 198, 255, 0.25) 45%,
+      transparent 75%
+    ),
+    rgba(255, 255, 255, 0.07);
 }
 .mg-dow {
-  padding: 10px 8px;
-  background: rgba(10, 12, 26, 0.92);
-  color: var(--faint);
-  font-size: 12px;
-  text-align: center;
+  padding: 12px 12px 10px;
+  background: rgba(10, 12, 26, 0.94);
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+}
+.mg-dow.is-weekend {
+  color: var(--faint);
 }
 .mg-day {
-  display: grid;
-  align-content: start;
-  gap: 3px;
-  min-height: 108px;
-  padding: 8px;
-  background: rgba(10, 12, 26, 0.92);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 125px;
+  padding: 10px 10px 16px;
+  background: rgba(11, 13, 28, 0.93);
   text-decoration: none;
-  transition: background 0.2s;
+  transition:
+    background 0.25s,
+    box-shadow 0.25s;
+}
+.mg-day.is-weekend {
+  background: rgba(8, 10, 22, 0.94);
+}
+.mg-day.is-now-week {
+  background: rgba(20, 20, 46, 0.93);
 }
 .mg-day:hover {
-  background: rgba(24, 26, 48, 0.95);
+  z-index: 1;
+  background: rgba(30, 30, 64, 0.96);
+  box-shadow: inset 0 0 0 1px rgba(169, 155, 255, 0.45);
 }
 .mg-day.is-out {
-  background: rgba(6, 7, 16, 0.92);
+  background: rgba(6, 7, 16, 0.95);
 }
-.mg-day.is-out .mg-num {
-  color: var(--faint);
-  font-weight: 400;
+.mg-day.is-out > * {
+  opacity: 0.4;
+}
+.mg-day.is-past:not(.is-out) > * {
+  opacity: 0.72;
+}
+.mg-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-height: 28px;
 }
 .mg-num {
-  font-size: 14px;
-  font-weight: 600;
-}
-.mg-day.is-today .mg-num {
   display: grid;
   place-items: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
+  min-width: 28px;
+  height: 28px;
+  margin-left: -4px;
+  border-radius: 999px;
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.mg-day.is-today {
+  background:
+    radial-gradient(
+      120% 90% at 0% 0%,
+      rgba(125, 107, 255, 0.28),
+      transparent 70%
+    ),
+    rgba(18, 18, 44, 0.95);
+  box-shadow: inset 0 0 0 1px rgba(169, 155, 255, 0.6);
+}
+.mg-day.is-today .mg-num {
   background: var(--grad-btn);
+  color: #fff;
+  box-shadow: 0 0 18px rgba(110, 100, 255, 0.7);
 }
-.mg-event {
-  /* Two lines before an ellipsis: narrow cells still show "Midterm". */
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
+/* One line per item: a colored dot, the start time, the title. Exams and
+   sessions sit on a tinted chip so they stand out from routine classes. */
+.mg-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
   padding: 2px 6px;
-  border-radius: 5px;
-  background: rgba(139, 123, 255, 0.3);
-  font-size: 11px;
-  line-height: 1.3;
+  margin: 0 -6px;
+  border-radius: 7px;
+  color: var(--ink);
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1.35;
+  white-space: nowrap;
 }
-.mg-event.kind-exam {
-  background: rgba(255, 143, 156, 0.28);
+.mg-item::before {
+  content: "";
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--tone, rgba(166, 171, 198, 0.8));
 }
-.mg-event.is-cancelled {
+.mg-item time {
+  flex: none;
+  color: var(--muted);
+  font-size: 10.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.mg-item > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mg-item.kind-session {
+  background: rgba(139, 123, 255, 0.2);
+}
+.mg-item.kind-session::before {
+  background: var(--indigo);
+  box-shadow: 0 0 6px var(--indigo);
+}
+.mg-item.kind-exam {
+  background: rgba(255, 143, 156, 0.16);
+}
+.mg-item.kind-exam::before {
+  background: var(--danger);
+  box-shadow: 0 0 6px var(--danger);
+}
+.mg-item.is-cancelled {
   opacity: 0.5;
   text-decoration: line-through;
 }
-.mg-more,
-.mg-classes {
-  color: var(--faint);
+/* "+2": what didn't fit in the day. */
+.mg-more {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(108, 198, 255, 0.12);
+  color: var(--sky);
   font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.mg-more:empty {
+  display: none;
+}
+/* Below desktop the grid scrolls, so each day lists at most three lines. */
+@media (max-width: 960px) {
+  .mg-item:nth-child(n + 5) {
+    display: none;
+  }
+}
+/* Phones: the day at a glance, a 7am–11pm track with busy stretches marked
+   (the item lines don't fit). */
+.mg-strip {
+  display: none;
+  position: absolute;
+  right: 10px;
+  bottom: 8px;
+  left: 10px;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+}
+.mg-strip i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  min-width: 3px;
+  border-radius: inherit;
+  background: var(--tone, rgba(166, 171, 198, 0.75));
+}
+.mg-strip i.kind-session {
+  background: var(--indigo);
+  box-shadow: 0 0 6px rgba(139, 123, 255, 0.8);
+}
+.mg-strip i.kind-exam {
+  background: var(--danger);
+  box-shadow: 0 0 6px rgba(255, 143, 156, 0.8);
 }
 @media (max-width: 640px) {
+  .mg-dow {
+    padding: 10px 0 8px;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-align: center;
+  }
   .mg-day {
     min-height: 64px;
-    padding: 5px;
+    padding: 5px 4px 12px;
+    gap: 3px;
   }
-  .mg-event {
-    font-size: 0;
-    height: 5px;
-    padding: 0;
+  .mg-top {
+    justify-content: center;
+    min-height: 24px;
   }
-  .mg-classes,
+  .mg-num {
+    min-width: 24px;
+    height: 24px;
+    margin: 0;
+    font-size: 13px;
+  }
+  .mg-item,
   .mg-more {
     display: none;
+  }
+  /* All-day exams aren't on the strip; keep them as a red bar. */
+  .mg-item.kind-exam {
+    display: block;
+    height: 4px;
+    margin: 0;
+    padding: 0;
+    background: var(--danger);
+    font-size: 0;
+  }
+  .mg-item.kind-exam::before {
+    display: none;
+  }
+  .mg-strip {
+    display: block;
+    right: 4px;
+    bottom: 5px;
+    left: 4px;
+  }
+}
+
+/* Desktop: the calendar page is exactly one window tall. The header
+   tightens and the grid takes the rest: month rows share the height, week
+   hours scale to it, and lines that don't fit a cell drop out whole. */
+@media (min-width: 961px) {
+  .calendar-page {
+    height: 100vh;
+    height: 100dvh;
+    padding-top: 26px;
+    padding-bottom: 18px;
+    gap: 14px;
+    grid-template-rows: auto auto minmax(0, 1fr);
+  }
+  .calendar-page .page-head {
+    margin-bottom: 0;
+  }
+  .calendar-page .page-head h1 {
+    margin-top: 6px;
+    font-size: clamp(30px, 3vw, 44px);
+  }
+  .calendar-page .page-lede {
+    max-width: none;
+    margin-top: 6px;
+    font-size: 13.5px;
+  }
+  .cal-stage {
+    grid-template-rows: minmax(0, 1fr);
+    min-height: 0;
+  }
+  .month-wrap {
+    min-height: 0;
+  }
+  .month-grid {
+    height: 100%;
+    grid-template-rows: auto repeat(6, minmax(0, 1fr));
+  }
+  .mg-day {
+    flex-flow: column wrap;
+    align-content: flex-start;
+    gap: 3px 24px;
+    min-height: 0;
+    padding: 8px 10px 6px;
+    overflow: hidden;
+  }
+  .mg-top {
+    min-height: 26px;
+  }
+  .mg-num {
+    height: 26px;
+    min-width: 26px;
+  }
+  .mg-item {
+    padding-block: 1px;
+  }
+  .mg-day > * {
+    flex: none;
+    width: 100%;
+  }
+  .mg-day > .mg-item {
+    width: calc(100% + 12px);
+  }
+  .week-grid {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+  }
+  .wg-body {
+    flex: 1 1 0;
+    height: auto;
+    min-height: 0;
+  }
+  .wg-hours {
+    grid-template-rows: repeat(var(--rows), minmax(0, 1fr));
+  }
+  .wg-col {
+    background-size: 100% calc(100% / var(--rows));
   }
 }
 
@@ -3283,7 +3804,38 @@ a.item-row:hover .item-go {
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
-.xs-tile span {
+/* Rolling digits (app/ui/sliding-number.tsx): a 1em window over a strip of
+   numerals that a CSS transition slides (compositor-driven, so it stays
+   smooth while the page works). */
+.sliding-number {
+  display: inline-flex;
+}
+.sn-digit {
+  position: relative;
+  display: inline-block;
+  overflow: clip;
+  line-height: 1;
+}
+.sn-sizer {
+  visibility: hidden;
+}
+.sn-strip {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  display: grid;
+  text-align: center;
+  transition: transform 0.5s cubic-bezier(0.33, 1, 0.68, 1);
+  will-change: transform;
+}
+.sn-strip.is-snap {
+  transition: none;
+}
+.sn-strip > span {
+  height: 1em;
+}
+.xs-tile > span {
   color: var(--faint);
   font-size: 10.5px;
   letter-spacing: 0.14em;

@@ -11,6 +11,7 @@ import {
   relativeDay,
 } from "@/lib/time";
 import { SectionPicker } from "../../ui/section-picker";
+import { SlidingNumber } from "../../ui/sliding-number";
 
 /*
  * Exam schedule, rebuilt from two 21st.dev pieces without Tailwind:
@@ -92,7 +93,6 @@ function useNow(initial: string) {
 }
 
 function Countdown({ exam, now }: { exam: ScheduleExam; now: number }) {
-  const reduce = useReducedMotion();
   const start = Date.parse(exam.startsAt);
   const end = Date.parse(exam.endsAt);
   const open = exam.allDay && start <= now && now < end;
@@ -116,24 +116,13 @@ function Countdown({ exam, now }: { exam: ScheduleExam; now: number }) {
       aria-label={`${units[0].value} days ${units[1].value} hours ${caption}`}
     >
       <div className="xs-count-tiles" aria-hidden="true">
-        {units.map((unit, i) => (
-          <motion.div
-            key={unit.label}
-            className="xs-tile"
-            animate={
-              i === 3 && !reduce
-                ? { scale: [1, 1.06, 1], opacity: [1, 0.78, 1] }
-                : undefined
-            }
-            transition={
-              i === 3
-                ? { duration: 1, repeat: Infinity, ease: "easeInOut" }
-                : undefined
-            }
-          >
-            <strong>{String(unit.value).padStart(2, "0")}</strong>
+        {units.map((unit) => (
+          <div key={unit.label} className="xs-tile">
+            <strong>
+              <SlidingNumber value={unit.value} pad={2} />
+            </strong>
             <span>{unit.label}</span>
-          </motion.div>
+          </div>
         ))}
       </div>
       <p className="xs-count-caption">

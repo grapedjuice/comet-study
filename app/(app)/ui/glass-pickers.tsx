@@ -338,6 +338,13 @@ export function GlassDate({
   };
 
   const month = monthOf(focus || today || "2000-01-01");
+  // Which way the month changed, so the grid slides in from that side.
+  const [lastMonth, setLastMonth] = useState(month);
+  const [dir, setDir] = useState(0);
+  if (month !== lastMonth) {
+    setDir(month > lastMonth ? 1 : -1);
+    setLastMonth(month);
+  }
   const first = `${month}-01`;
   const start = addDays(first, -utc(first).getUTCDay());
   const days = Array.from({ length: 42 }, (_, i) => addDays(start, i));
@@ -398,8 +405,8 @@ export function GlassDate({
             key={month}
             className="dp-month"
             aria-live="polite"
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, x: dir * 12 }}
+            animate={{ opacity: 1, x: 0 }}
           >
             {monthFmt.format(utc(first))}
           </motion.strong>
@@ -423,9 +430,9 @@ export function GlassDate({
           ref={grid}
           className="dp-grid"
           onKeyDown={move}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.18 }}
+          initial={{ opacity: 0, x: dir * 28 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
         >
           {days.map((date) => (
             <button

@@ -3,7 +3,12 @@ import Link from "next/link";
 import { requireStudent } from "@/lib/app-session";
 import { listUserCourses } from "@/lib/courses";
 import { listMyGroups } from "@/lib/groups";
-import { findMatches, getProfile } from "@/lib/matching";
+import {
+  findMatches,
+  getProfile,
+  SCORE_PARTS,
+  type ScoreComponents,
+} from "@/lib/matching";
 import {
   GROUP_MODALITIES,
   labelOf,
@@ -11,7 +16,6 @@ import {
   STUDY_STYLES,
 } from "@/lib/study-options";
 import {
-  dismissAction,
   inviteAction,
   joinGroupAction,
   startGroupWithAction,
@@ -121,7 +125,7 @@ export default async function MatchPage({
           <ul className="match-list">
             {matches.groups.map((g) => (
               <li key={g.id} className="match-card">
-                <Score value={g.score} />
+                <Score value={g.score} parts={g.components} />
                 <div className="match-body">
                   <h3>
                     <Link href={`/groups/${g.id}`}>{g.name}</Link>
@@ -163,12 +167,6 @@ export default async function MatchPage({
                       </SubmitButton>
                     </ActionForm>
                   )}
-                  <ActionForm
-                    action={dismissAction}
-                    hidden={{ targetType: "group", targetId: g.id }}
-                  >
-                    <SubmitButton className="text-button">Hide</SubmitButton>
-                  </ActionForm>
                 </div>
               </li>
             ))}
@@ -195,7 +193,7 @@ export default async function MatchPage({
           <ul className="match-list">
             {matches.people.map((p) => (
               <li key={p.id} className="match-card">
-                <Score value={p.score} />
+                <Score value={p.score} parts={p.components} />
                 <div className="match-body">
                   <h3>
                     {p.name}
@@ -248,12 +246,6 @@ export default async function MatchPage({
                       </SubmitButton>
                     </ActionForm>
                   )}
-                  <ActionForm
-                    action={dismissAction}
-                    hidden={{ targetType: "user", targetId: p.id }}
-                  >
-                    <SubmitButton className="text-button">Hide</SubmitButton>
-                  </ActionForm>
                 </div>
               </li>
             ))}
@@ -269,24 +261,66 @@ export default async function MatchPage({
   );
 }
 
-function Score({ value }: { value: number }) {
+/**
+ * The match ring. Tapping it opens the breakdown: points earned out of each
+ * part's weight (lib/matching.ts SCORE_PARTS), so "52" means something.
+ */
+function Score({ value, parts }: { value: number; parts: ScoreComponents }) {
+  // Whole points per part that add up to the score shown: floor each, then
+  // hand the leftover points to the largest remainders.
+  const exact = SCORE_PARTS.map((part) => parts[part.key] * part.weight);
+  const points = exact.map(Math.floor);
+  const spare = value - points.reduce((sum, n) => sum + n, 0);
+  exact
+    .map((x, i) => ({ i, rest: x - Math.floor(x) }))
+    .sort((a, b) => b.rest - a.rest)
+    .slice(0, Math.max(0, spare))
+    .forEach(({ i }) => points[i]++);
   return (
-    <div
-      className="score"
-      style={{ "--score": value } as React.CSSProperties}
-      aria-label={`${value}% match`}
-    >
-      <svg viewBox="0 0 44 44" aria-hidden="true">
-        <circle cx="22" cy="22" r="19" className="score-track" />
-        <circle
-          cx="22"
-          cy="22"
-          r="19"
-          className="score-fill"
-          pathLength={100}
-        />
-      </svg>
-      <span>{value}</span>
-    </div>
+    <details className="score-details">
+      <summary
+        className="score"
+        style={{ "--score": value } as React.CSSProperties}
+        aria-label={`${value} out of 100 match. Show how it's scored`}
+      >
+        <svg viewBox="0 0 44 44" aria-hidden="true">
+          <circle cx="22" cy="22" r="19" className="score-track" />
+          <circle
+            cx="22"
+            cy="22"
+            r="19"
+            className="score-fill"
+            pathLength={100}
+          />
+        </svg>
+        <span>{value}</span>
+        <small aria-hidden="true">match</small>
+      </summary>
+      <div className="score-pop">
+        <p className="score-pop-head">
+          <strong>{value}</strong> / 100 match
+        </p>
+        <ul>
+          {SCORE_PARTS.map((part, i) => {
+            const got = Math.min(part.weight, points[i]);
+            return (
+              <li key={part.key}>
+                <span>{part.label}</span>
+                <i aria-hidden="true">
+                  <b style={{ width: `${(got / part.weight) * 100}%` }} />
+                </i>
+                <em>
+                  {got}/{part.weight}
+                </em>
+              </li>
+            );
+          })}
+        </ul>
+        <p className="score-pop-note">
+          Anything one of you hasn’t filled in counts as half, so adding your
+          free hours, styles and goals in your profile sharpens every score.
+        </p>
+      </div>
+    </details>
   );
 }

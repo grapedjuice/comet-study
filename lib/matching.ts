@@ -172,6 +172,25 @@ export type MatchSeeker = {
 
 const clamp = (value: number) => Math.min(1, Math.max(0, value));
 
+/**
+ * What a match score is made of, in points out of 100. Each part is scored
+ * 0–1 and scaled by its weight; anything neither side has filled in counts as
+ * half. The match page explains scores from this same list.
+ */
+export const SCORE_PARTS = [
+  { key: "overlap", label: "Shared free time", weight: 40 },
+  { key: "style", label: "Study styles", weight: 20 },
+  { key: "goals", label: "Goals", weight: 15 },
+  { key: "modality", label: "In person or online", weight: 10 },
+  { key: "size", label: "Group size", weight: 7 },
+  { key: "location", label: "Same section", weight: 5 },
+  { key: "reliability", label: "Show-up record", weight: 3 },
+] as const;
+export type ScoreComponents = Record<
+  (typeof SCORE_PARTS)[number]["key"],
+  number
+>;
+
 /** Deterministic, versioned score in [0, 100] with plain-language reasons. */
 export function scoreMatch(seeker: MatchSeeker, target: MatchTarget) {
   const windows =
@@ -190,15 +209,20 @@ export function scoreMatch(seeker: MatchSeeker, target: MatchTarget) {
     target.capacity === undefined
       ? 0.5
       : clamp(1 - Math.abs(target.capacity - seeker.preferredSize) / 4);
-  const reliability = 0.5;
-  const raw =
-    0.4 * overlap +
-    0.2 * style +
-    0.15 * goals +
-    0.1 * modality +
-    0.05 * location +
-    0.07 * size +
-    0.03 * reliability;
+  const reliability = 0.5; // Not tracked yet.
+  const components: ScoreComponents = {
+    overlap,
+    style,
+    goals,
+    modality,
+    location,
+    size,
+    reliability,
+  };
+  const raw = SCORE_PARTS.reduce(
+    (sum, part) => sum + (part.weight / 100) * components[part.key],
+    0,
+  );
 
   const reasons: string[] = [];
   if (windows?.length) {
@@ -229,15 +253,7 @@ export function scoreMatch(seeker: MatchSeeker, target: MatchTarget) {
     score: Math.round(100 * clamp(raw)),
     scoreVersion: SCORE_VERSION,
     windows: windows?.length ?? 0,
-    components: {
-      overlap,
-      style,
-      goals,
-      modality,
-      location,
-      size,
-      reliability,
-    },
+    components,
     reasons,
   };
 }
@@ -259,6 +275,7 @@ export type GroupMatch = {
   myStatus: "pending" | "invited" | null;
   members: string[];
   score: number;
+  components: ScoreComponents;
   windows: number;
   reasons: string[];
 };
@@ -273,6 +290,7 @@ export type PersonMatch = {
   inMyGroup: boolean;
   invitedTo: string[];
   score: number;
+  components: ScoreComponents;
   windows: number;
   reasons: string[];
 };
@@ -386,6 +404,7 @@ export async function findMatches(
       myStatus: row.my_status,
       members: members.map((m) => publicName(m.name)),
       score: result.score,
+      components: result.components,
       windows: result.windows,
       reasons: result.reasons,
     });
@@ -447,6 +466,7 @@ export async function findMatches(
         inMyGroup: row.in_my_group,
         invitedTo: row.invited_to ?? [],
         score: result.score,
+        components: result.components,
         windows: result.windows,
         reasons: result.reasons,
       };

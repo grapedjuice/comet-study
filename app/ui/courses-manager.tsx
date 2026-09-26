@@ -305,13 +305,29 @@ export default function CoursesManager({
                 setNotice(null);
               }}
             >
+              {tab === key ? (
+                <motion.span
+                  layoutId="courses-tab-pill"
+                  className="courses-tab-pill"
+                  aria-hidden="true"
+                  transition={{ type: "spring", stiffness: 460, damping: 36 }}
+                />
+              ) : null}
               {label}
             </button>
           ))}
         </div>
 
         {tab === "search" ? (
-          <div role="tabpanel" id="panel-search" aria-labelledby="tab-search">
+          <motion.div
+            key="search"
+            role="tabpanel"
+            id="panel-search"
+            aria-labelledby="tab-search"
+            initial={{ opacity: 0, x: -16 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+          >
             <label className="field-label" htmlFor="course-search">
               Course code or title
             </label>
@@ -435,9 +451,17 @@ export default function CoursesManager({
                 </button>
               </div>
             ) : null}
-          </div>
+          </motion.div>
         ) : (
-          <div role="tabpanel" id="panel-import" aria-labelledby="tab-import">
+          <motion.div
+            key="import"
+            role="tabpanel"
+            id="panel-import"
+            aria-labelledby="tab-import"
+            initial={{ opacity: 0, x: 16 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+          >
             <ol className="import-steps">
               <li>
                 In <strong>Orion</strong>, open your class schedule (
@@ -532,7 +556,7 @@ export default function CoursesManager({
             <p className="field-hint">
               Only the courses you choose are saved — the pasted text never is.
             </p>
-          </div>
+          </motion.div>
         )}
         <p className={`courses-notice ${notice?.kind ?? ""}`} role="status">
           {notice?.text}

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ViewTransition } from "react";
 import { initials } from "@/lib/app-errors";
 import { Icon, type IconName } from "./icons";
 
@@ -10,7 +11,7 @@ export function PageHeader({
   actions,
 }: {
   kicker: string;
-  title: string;
+  title: React.ReactNode;
   accent?: string;
   children?: React.ReactNode;
   actions?: React.ReactNode;
@@ -153,4 +154,17 @@ export function Badge({
 
 export function CourseTag({ code }: { code: string }) {
   return <span className="course-tag">{code}</span>;
+}
+
+/**
+ * The active tab's highlight. Rendered inside whichever tab is current; the
+ * same `name` on the old and new page lets the browser glide it across
+ * (a view transition), so it works for tabs that navigate.
+ */
+export function SegPill({ name }: { name: string }) {
+  return (
+    <ViewTransition name={name} share="seg-pill" default="none">
+      <i className="seg-pill" aria-hidden="true" />
+    </ViewTransition>
+  );
 }
