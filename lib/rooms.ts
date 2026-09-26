@@ -312,6 +312,99 @@ export function roomDay(nebula: NebulaClient, date: string) {
   return data;
 }
 
+/** Every known campus room (building, number, capacity), cached for a day. */
+export async function listCampusRooms(nebula: NebulaClient) {
+  return [...(await inventory(nebula)).values()];
+}
+
+export type RoomSuggestion = {
+  label: string; // "ECSS 2.410"
+  room: string;
+  capacity: number | null;
+  free: boolean | null; // null when no time was given
+};
+export type RoomSuggestionGroup = {
+  building: string;
+  name: string | null;
+  rooms: RoomSuggestion[];
+};
+
+/**
+ * Rooms matching what someone typed in a "where" field: "ecss 2.4",
+ * "ECSS2", "green hall", "2.410". Grouped by building, rooms free at the
+ * chosen time first. With nothing typed, only free rooms are suggested.
+ */
+export function suggestRooms(
+  rooms: {
+    building: string;
+    room: string;
+    capacity: number | null;
+    free?: boolean | null;
+  }[],
+  query: string,
+  { perBuilding = 6, buildings = 6 } = {},
+): RoomSuggestionGroup[] {
+  const q = query.trim().toUpperCase().replace(/\s+/g, " ");
+  const compact = q.replace(/\s/g, "");
+  const words = q.split(" ").filter(Boolean);
+  const scored: { score: number; item: (typeof rooms)[number] }[] = [];
+  for (const item of rooms) {
+    const label = `${item.building} ${item.room}`;
+    const name = (BUILDING_NAMES[item.building] ?? "").toUpperCase();
+    let score = -1;
+    if (!q) score = item.free ? 1 : -1;
+    else if (label.startsWith(q) || label.replace(" ", "").startsWith(compact))
+      score = 4;
+    else if (
+      words.length > 1 &&
+      item.building.startsWith(words[0]) &&
+      item.room.startsWith(words.slice(1).join(""))
+    )
+      score = 3;
+    else if (item.room.startsWith(compact)) score = 2;
+    else if (q.length >= 3 && name.includes(q)) score = 2;
+    else if (
+      words.length > 1 &&
+      q.length >= 3 &&
+      name.includes(words.slice(0, -1).join(" ")) &&
+      item.room.startsWith(words.at(-1)!)
+    )
+      score = 3;
+    if (score < 0) continue;
+    // Rooms free at the chosen time rank above unknown, then busy ones.
+    const freeBonus = item.free === true ? 0.5 : item.free === false ? -0.5 : 0;
+    scored.push({ score: score + freeBonus, item });
+  }
+  scored.sort(
+    (a, b) =>
+      b.score - a.score ||
+      a.item.building.localeCompare(b.item.building) ||
+      a.item.room.localeCompare(b.item.room, undefined, { numeric: true }),
+  );
+  const groups = new Map<string, RoomSuggestionGroup>();
+  for (const { item } of scored) {
+    const group =
+      groups.get(item.building) ??
+      (groups.size < buildings
+        ? groups
+            .set(item.building, {
+              building: item.building,
+              name: BUILDING_NAMES[item.building] ?? null,
+              rooms: [],
+            })
+            .get(item.building)!
+        : null);
+    if (!group || group.rooms.length >= perBuilding) continue;
+    group.rooms.push({
+      label: `${item.building} ${item.room}`,
+      room: item.room,
+      capacity: item.capacity,
+      free: item.free ?? null,
+    });
+  }
+  return [...groups.values()];
+}
+
 export function buildingsIn(rooms: RoomDay[]) {
   return [...new Set(rooms.map((room) => room.building))]
     .sort()

@@ -11,6 +11,7 @@ import {
   type GroupSummary,
 } from "@/lib/groups";
 import { listResources } from "@/lib/resources";
+import { listCourseCampusExams } from "@/lib/campus-exams";
 import { listGroupExams, listGroupSessions } from "@/lib/sessions";
 import {
   EXAM_KINDS,
@@ -44,7 +45,13 @@ import {
   transferOwnerAction,
 } from "../../actions";
 import { Avatars, Badge, CourseTag, Empty, Panel, Seats } from "../../ui/bits";
-import { examTone } from "../../ui/exam-bits";
+import { RoomCombobox } from "../../ui/room-combobox";
+import {
+  CampusExamItems,
+  campusExamRelative,
+  campusExamSource,
+  examTone,
+} from "../../ui/exam-bits";
 import { ActionForm, ConfirmSubmit, SubmitButton } from "../../ui/forms";
 import { GlassSelect } from "../../ui/glass-select";
 import { Icon } from "../../ui/icons";
@@ -95,15 +102,28 @@ export default async function GroupPage({
     ? (search.tab as Tab)
     : "overview";
   const owner = group.myRole === "owner";
-  const [members, sessions, exams, resources, activity, invitable] =
-    await Promise.all([
-      listMembers(db, id),
-      listGroupSessions(db, user.id, id),
-      listGroupExams(db, user.id, id),
-      listResources(db, user.id, { groupId: id }, tab === "library" ? 60 : 4),
-      listActivity(db, id, 12),
-      tab === "members" ? listInvitable(db, id) : Promise.resolve([]),
-    ]);
+  const [
+    members,
+    sessions,
+    exams,
+    campusExams,
+    resources,
+    activity,
+    invitable,
+  ] = await Promise.all([
+    listMembers(db, id),
+    listGroupSessions(db, user.id, id),
+    listGroupExams(db, user.id, id),
+    listCourseCampusExams(
+      db,
+      group.courseCode,
+      group.term,
+      group.sectionNumber,
+    ),
+    listResources(db, user.id, { groupId: id }, tab === "library" ? 60 : 4),
+    listActivity(db, id, 12),
+    tab === "members" ? listInvitable(db, id) : Promise.resolve([]),
+  ]);
   const now = new Date();
   const upcoming = sessions.filter(
     (s) => s.endsAt > now && s.status === "scheduled",
@@ -111,6 +131,27 @@ export default async function GroupPage({
   const past = sessions.filter(
     (s) => s.endsAt <= now || s.status === "cancelled",
   );
+  // Classmate-reported exams and ones on UTD's schedule, soonest first.
+  const upcomingExams = [
+    ...exams
+      .filter((e) => e.startsAt > now)
+      .map((e) => ({
+        key: e.id,
+        label: e.label,
+        startsAt: e.startsAt,
+        relative: relativeDay(e.startsAt, now),
+        badge: { label: `${e.badge} · ${e.confirms}`, tone: examTone(e.badge) },
+      })),
+    ...campusExams
+      .filter((e) => e.endsAt > now)
+      .map((e) => ({
+        key: `u-${e.id}`,
+        label: e.label,
+        startsAt: e.startsAt,
+        relative: campusExamRelative(e, now),
+        badge: campusExamSource(e),
+      })),
+  ].sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime());
   const active = members.filter((m) => m.status === "active");
   const pending = members.filter((m) => m.status === "pending");
   const invited = members.filter((m) => m.status === "invited");
@@ -226,29 +267,26 @@ export default async function GroupPage({
                 </Link>
               }
             >
-              {exams.filter((e) => e.startsAt > now).length ? (
+              {upcomingExams.length ? (
                 <ul className="exam-mini">
-                  {exams
-                    .filter((e) => e.startsAt > now)
-                    .slice(0, 3)
-                    .map((exam) => (
-                      <li key={exam.id}>
-                        <Link href={`/groups/${id}?tab=exams`}>
-                          <span className="exam-mini-date">
-                            <strong>
-                              {formatDay(exam.startsAt).split(", ")[1]}
-                            </strong>
-                            <span>{relativeDay(exam.startsAt, now)}</span>
-                          </span>
-                          <span className="exam-mini-body">
-                            <strong>{exam.label}</strong>
-                            <Badge tone={examTone(exam.badge)}>
-                              {exam.badge} · {exam.confirms}
-                            </Badge>
-                          </span>
-                        </Link>
-                      </li>
-                    ))}
+                  {upcomingExams.slice(0, 3).map((exam) => (
+                    <li key={exam.key}>
+                      <Link href={`/groups/${id}?tab=exams`}>
+                        <span className="exam-mini-date">
+                          <strong>
+                            {formatDay(exam.startsAt).split(", ")[1]}
+                          </strong>
+                          <span>{exam.relative}</span>
+                        </span>
+                        <span className="exam-mini-body">
+                          <strong>{exam.label}</strong>
+                          <Badge tone={exam.badge.tone}>
+                            {exam.badge.label}
+                          </Badge>
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
                 </ul>
               ) : (
                 <Empty title="No exams added">
@@ -409,6 +447,26 @@ export default async function GroupPage({
       {tab === "exams" ? (
         <div className="split">
           <div className="split-main">
+            {campusExams.length || !group.sectionNumber ? (
+              <Panel
+                title="On UTD’s schedule"
+                icon="calendar"
+                id="campus-exams"
+              >
+                {campusExams.length ? (
+                  <CampusExamItems
+                    exams={campusExams}
+                    now={now}
+                    showCourse={false}
+                  />
+                ) : null}
+                <p className="fine-print">
+                  {group.sectionNumber
+                    ? "Finals come from the UT Dallas registrar; check Orion the week before finals in case the room changes. Testing Center exams are taken on one of the listed days; book a time on RegisterBlast. “Room booked” exams are rooms a department reserved, and your instructor has the final word."
+                    : "This group isn’t tied to one section, so only course-wide exams show here. Each member sees their section’s final on their Courses page."}
+                </p>
+              </Panel>
+            ) : null}
             <Panel title="Exam dates" icon="exam" id="exam-list">
               {exams.length ? (
                 <ul className="exam-list">
@@ -564,8 +622,7 @@ export default async function GroupPage({
                   <span className="field-label">
                     Room <em>optional</em>
                   </span>
-                  <SmoothInput
-                    className="field"
+                  <RoomCombobox
                     name="location"
                     maxLength={80}
                     placeholder="SLC 1.102"
@@ -934,8 +991,7 @@ function SessionForm({ groupId, search }: { groupId: string; search: Search }) {
       </div>
       <label className="form-field">
         <span className="field-label">Where</span>
-        <SmoothInput
-          className="field"
+        <RoomCombobox
           name="location"
           maxLength={120}
           defaultValue={search.room?.slice(0, 120) ?? ""}

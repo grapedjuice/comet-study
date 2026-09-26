@@ -18,6 +18,7 @@ import {
   findFreeRooms,
   mergeIntervals,
   normalizeFeed,
+  suggestRooms,
   type RoomDay,
 } from "../../lib/rooms";
 import { examConfidence, validateSessionTimes } from "../../lib/sessions";
@@ -265,6 +266,31 @@ describe("rooms", () => {
     ).toEqual(["A 1"]);
     expect(findFreeRooms(rooms, { from: 700, to: 700 })).toEqual([]);
   });
+
+  it("suggests rooms for a where field, free ones first", () => {
+    const rooms = [
+      { building: "ECSS", room: "2.410", capacity: 40, free: false },
+      { building: "ECSS", room: "2.412", capacity: 40, free: true },
+      { building: "ECSW", room: "1.315", capacity: 120, free: true },
+      { building: "GR", room: "2.302", capacity: 60, free: null },
+      { building: "SLC", room: "1.102", capacity: 180, free: false },
+    ];
+    const labels = (q: string) =>
+      suggestRooms(rooms, q).flatMap((g) => g.rooms.map((r) => r.label));
+    expect(labels("ecss 2.4")).toEqual(["ECSS 2.412", "ECSS 2.410"]);
+    expect(labels("ECSS2")).toEqual(["ECSS 2.412", "ECSS 2.410"]);
+    // Grouped by building, in the order each building first ranks.
+    expect(labels("ec")).toEqual(["ECSS 2.412", "ECSS 2.410", "ECSW 1.315"]);
+    expect(labels("green")).toEqual(["GR 2.302"]);
+    expect(labels("green hall 2")).toEqual(["GR 2.302"]);
+    expect(labels("1.102")).toEqual(["SLC 1.102"]);
+    // Nothing typed: only rooms free at the chosen time.
+    expect(labels("")).toEqual(["ECSS 2.412", "ECSW 1.315"]);
+    expect(suggestRooms(rooms, "ecss")[0]).toMatchObject({
+      building: "ECSS",
+      name: "Engineering & CS South",
+    });
+  });
 });
 
 describe("sessions and exams", () => {
@@ -303,6 +329,18 @@ describe("sessions and exams", () => {
     ]);
     expect(ics).toContain("DTSTART:20260925T230000Z");
     expect(ics).toContain("SEQUENCE:2");
+    // Whole campus days export as dates, with an exclusive end.
+    const allDay = buildIcs([
+      {
+        uid: "exam-1@x",
+        title: "EE 3161 Final",
+        startsAt: new Date("2026-12-11T06:00:00Z"),
+        endsAt: new Date("2026-12-16T06:00:00Z"),
+        allDay: true,
+      },
+    ]);
+    expect(allDay).toContain("DTSTART;VALUE=DATE:20261211");
+    expect(allDay).toContain("DTEND;VALUE=DATE:20261216");
     expect(ics).toContain("STATUS:CANCELLED");
     expect(
       ics.split("\r\n").every((line) => Buffer.byteLength(line) <= 75),

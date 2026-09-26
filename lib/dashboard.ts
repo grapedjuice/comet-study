@@ -1,3 +1,4 @@
+import { listMyCampusExams } from "./campus-exams";
 import { listUserCourses } from "./courses";
 import type { createDatabaseClient } from "./db";
 import { listCourseGroups, listMyGroups, type GroupSummary } from "./groups";
@@ -43,16 +44,31 @@ export async function loadDashboard(
   now = new Date(),
 ) {
   const horizon = new Date(now.getTime() + 21 * 86400000);
-  const [courses, groups, openGroups, sessions, exams, profile, resources] =
-    await Promise.all([
-      listUserCourses(db, userId, term),
-      listMyGroups(db, userId, term),
-      listCourseGroups(db, userId, term),
-      listMySessions(db, userId, new Date(now.getTime() - 60 * 60000), horizon),
-      listMyExams(db, userId, now, new Date(now.getTime() + 60 * 86400000)),
-      getProfile(db, userId),
-      listResources(db, userId, {}, 5),
-    ]);
+  const [
+    courses,
+    groups,
+    openGroups,
+    sessions,
+    exams,
+    campusExams,
+    profile,
+    resources,
+  ] = await Promise.all([
+    listUserCourses(db, userId, term),
+    listMyGroups(db, userId, term),
+    listCourseGroups(db, userId, term),
+    listMySessions(db, userId, new Date(now.getTime() - 60 * 60000), horizon),
+    listMyExams(db, userId, now, new Date(now.getTime() + 60 * 86400000)),
+    // Through finals, which are usually more than 60 days out.
+    listMyCampusExams(
+      db,
+      userId,
+      now,
+      new Date(now.getTime() + 150 * 86400000),
+    ),
+    getProfile(db, userId),
+    listResources(db, userId, {}, 5),
+  ]);
 
   const active = groups.filter((g) => g.myStatus === "active");
   const actions: Action[] = [];
@@ -125,6 +141,7 @@ export async function loadDashboard(
     groups: active,
     sessions: sessions.filter((s) => s.endsAt > now),
     exams,
+    campusExams,
     actions: actions.slice(0, 8),
     resources,
     profile,

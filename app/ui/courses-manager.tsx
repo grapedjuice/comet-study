@@ -1,7 +1,9 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { SectionPicker } from "./section-picker";
 import { SmoothInput } from "./smooth-input";
 
 export type UserCourse = {
@@ -59,11 +61,15 @@ export default function CoursesManager({
   initialCourses,
   termLabel,
   onCoursesChange,
+  refreshOnChange = false,
 }: {
   initialCourses: UserCourse[];
   termLabel: string;
   onCoursesChange?: (courses: UserCourse[]) => void;
+  /** Re-render the server page after a change (e.g. its exam schedule). */
+  refreshOnChange?: boolean;
 }) {
+  const router = useRouter();
   const [courses, setCourses] = useState(initialCourses);
   useEffect(() => {
     onCoursesChange?.(courses);
@@ -142,6 +148,7 @@ export default function CoursesManager({
         body: JSON.stringify({ courses: items, source }),
       });
       setCourses(data.courses);
+      if (refreshOnChange) router.refresh();
       const extra = data.sectionMissing.length
         ? ` Couldn’t match section ${data.sectionMissing.join(", ")} for this term, so it was added without one.`
         : "";
@@ -163,6 +170,7 @@ export default function CoursesManager({
     try {
       await call(`/api/v1/me/courses/${course.id}`, { method: "DELETE" });
       setCourses((current) => current.filter((item) => item.id !== course.id));
+      if (refreshOnChange) router.refresh();
       setNotice({ kind: "ok", text: `Removed ${course.code}.` });
     } catch (error) {
       setNotice({ kind: "error", text: (error as Error).message });
@@ -240,6 +248,12 @@ export default function CoursesManager({
                     >
                       <i aria-hidden="true" /> {classmatesLine(course)}
                     </p>
+                    <SectionPicker<UserCourse>
+                      key={course.sectionNumber ?? "none"}
+                      code={course.code}
+                      current={course.sectionNumber}
+                      onSaved={setCourses}
+                    />
                   </div>
                   <button
                     type="button"

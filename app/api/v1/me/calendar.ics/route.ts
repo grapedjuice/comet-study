@@ -1,11 +1,18 @@
 import { apiError } from "../../../../../lib/api";
+import {
+  CAMPUS_EXAM_NOTE,
+  listMyCampusExams,
+} from "../../../../../lib/campus-exams";
 import { buildIcs } from "../../../../../lib/calendar";
 import { currentUserContext } from "../../../../../lib/request-context";
 import { listMyExams, listMySessions } from "../../../../../lib/sessions";
 
 export const runtime = "nodejs";
 
-/** Every session and exam in the student's groups, past month to six months out. */
+/**
+ * Every session and exam in the student's groups, plus UTD-scheduled exams for
+ * their courses, past month to six months out.
+ */
 export async function GET(request: Request) {
   try {
     const { db, user } = await currentUserContext();
@@ -13,9 +20,10 @@ export async function GET(request: Request) {
     const now = Date.now();
     const from = new Date(now - 30 * 86400000);
     const to = new Date(now + 183 * 86400000);
-    const [sessions, exams] = await Promise.all([
+    const [sessions, exams, campusExams] = await Promise.all([
       listMySessions(db, user.id, from, to, { includeCancelled: true }),
       listMyExams(db, user.id, from, to),
+      listMyCampusExams(db, user.id, from, to),
     ]);
     const host = new URL(request.url).host;
     const body = buildIcs(
@@ -37,6 +45,17 @@ export async function GET(request: Request) {
           endsAt: e.endsAt ?? new Date(e.startsAt.getTime() + 75 * 60000),
           location: e.location,
           description: `Reported by classmates (${e.badge}, ${e.confirms} confirmed). Check your syllabus.`,
+        })),
+        ...campusExams.map((e) => ({
+          uid: `utd-exam-${e.id}@${host}`,
+          title: `${e.courseCode} ${e.label}`,
+          startsAt: e.startsAt,
+          endsAt: e.endsAt,
+          location: e.location,
+          allDay: e.allDay,
+          description: e.bookingUrl
+            ? `${CAMPUS_EXAM_NOTE[e.source]} ${e.bookingUrl}`
+            : CAMPUS_EXAM_NOTE[e.source],
         })),
       ],
       "Comet Study",

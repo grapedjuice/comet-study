@@ -1,4 +1,4 @@
-import { parseClock } from "./time";
+import { campusDate, parseClock } from "./time";
 
 /* ---------- Weekly class meetings ---------- */
 
@@ -55,6 +55,8 @@ export type IcsEvent = {
   sequence?: number;
   cancelled?: boolean;
   updatedAt?: Date;
+  /** Whole campus days: DTSTART/DTEND as dates, DTEND exclusive. */
+  allDay?: boolean;
 };
 
 const stamp = (date: Date) =>
@@ -107,8 +109,12 @@ export function buildIcs(
       "BEGIN:VEVENT",
       `UID:${event.uid}`,
       `DTSTAMP:${stamp(event.updatedAt ?? now)}`,
-      `DTSTART:${stamp(event.startsAt)}`,
-      `DTEND:${stamp(event.endsAt)}`,
+      ...(event.allDay
+        ? [
+            `DTSTART;VALUE=DATE:${campusDate(event.startsAt).replaceAll("-", "")}`,
+            `DTEND;VALUE=DATE:${campusDate(event.endsAt).replaceAll("-", "")}`,
+          ]
+        : [`DTSTART:${stamp(event.startsAt)}`, `DTEND:${stamp(event.endsAt)}`]),
       `SEQUENCE:${event.sequence ?? 0}`,
       `SUMMARY:${escapeIcs(event.title)}`,
     );

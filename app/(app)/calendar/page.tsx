@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requireStudent } from "@/lib/app-session";
 import { parseSchedule } from "@/lib/calendar";
+import { listMyCampusExams } from "@/lib/campus-exams";
 import { listUserCourses } from "@/lib/courses";
 import { listMyExams, listMySessions } from "@/lib/sessions";
 import {
@@ -18,6 +19,11 @@ import {
   weekStart,
 } from "@/lib/time";
 import { PageHeader } from "../ui/bits";
+import {
+  campusExamDays,
+  campusExamSource,
+  campusExamWhen,
+} from "../ui/exam-bits";
 import { Icon } from "../ui/icons";
 
 export const metadata: Metadata = { title: "Calendar — Comet Study" };
@@ -40,6 +46,7 @@ type Item = {
   detail: string;
   href: string;
   cancelled?: boolean;
+  allDay?: boolean;
 };
 
 export default async function CalendarPage({
@@ -62,10 +69,11 @@ export default async function CalendarPage({
   const from = campusToUtc(days[0], "00:00")!;
   const to = campusToUtc(addDays(days.at(-1)!, 1), "00:00")!;
 
-  const [courses, sessions, exams] = await Promise.all([
+  const [courses, sessions, exams, campusExams] = await Promise.all([
     listUserCourses(db, user.id, term),
     listMySessions(db, user.id, from, to, { includeCancelled: true }),
     listMyExams(db, user.id, from, to),
+    listMyCampusExams(db, user.id, from, to),
   ]);
   const blocks = courses.flatMap((c) => parseSchedule(c.code, c.schedule));
   const items: Item[] = [];
@@ -110,6 +118,35 @@ export default async function CalendarPage({
       detail: `${formatTimeRange(e.startsAt, e.endsAt ?? e.startsAt)} · ${e.badge}`,
       href: `/groups/${e.groupId}?tab=exams`,
     });
+  for (const e of campusExams) {
+    const title = `${e.courseCode} ${e.label}`;
+    if (e.allDay) {
+      // Testing Center exams: one all-day entry per day it can be taken.
+      for (const date of campusExamDays(e))
+        items.push({
+          key: `u-${e.id}-${date}`,
+          kind: "exam",
+          date,
+          start: 0,
+          end: 0,
+          allDay: true,
+          title,
+          detail: `${campusExamWhen(e)} · Testing Center, book a time`,
+          href: "/courses#exams",
+        });
+      continue;
+    }
+    items.push({
+      key: `u-${e.id}`,
+      kind: "exam",
+      date: campusDate(e.startsAt),
+      start: campusMinutes(e.startsAt),
+      end: campusMinutes(e.endsAt),
+      title,
+      detail: `${formatTimeRange(e.startsAt, e.endsAt)}${e.location ? ` · ${e.location}` : ""} · ${campusExamSource(e).label}`,
+      href: "/courses#exams",
+    });
+  }
   items.sort((a, b) => a.start - b.start);
   const byDay = new Map<string, Item[]>();
   for (const item of items)
@@ -141,8 +178,8 @@ export default async function CalendarPage({
         }
       >
         <p>
-          Classes from your sections, your groups’ sessions and exam dates ·{" "}
-          {TZ_LABEL}
+          Classes from your sections, your groups’ sessions, and exam dates from
+          your groups, the registrar and the Testing Center · {TZ_LABEL}
         </p>
       </PageHeader>
 
@@ -201,6 +238,28 @@ export default async function CalendarPage({
                 </span>
               ))}
             </div>
+            {days.some((d) => byDay.get(d)?.some((i) => i.allDay)) ? (
+              <div className="wg-allday">
+                <span>All day</span>
+                {days.map((d) => (
+                  <div key={d}>
+                    {(byDay.get(d) ?? [])
+                      .filter((item) => item.allDay)
+                      .map((item) => (
+                        <Link
+                          key={item.key}
+                          href={item.href}
+                          tabIndex={-1}
+                          className={`wg-allday-event kind-${item.kind}`}
+                          title={item.detail}
+                        >
+                          {item.title}
+                        </Link>
+                      ))}
+                  </div>
+                ))}
+              </div>
+            ) : null}
             <div
               className="wg-body"
               style={{ "--rows": hours.length } as React.CSSProperties}

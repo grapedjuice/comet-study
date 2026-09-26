@@ -37,7 +37,13 @@ import { ActionForm, SubmitButton } from "../ui/forms";
 import { Icon, type IconName } from "../ui/icons";
 import { FreeRoomsNow, RoomsSkeleton } from "../ui/free-rooms";
 import { RsvpControl, SessionCalendarLinks } from "../ui/session-bits";
-import { examTone } from "../ui/exam-bits";
+import {
+  campusExamDays,
+  campusExamRelative,
+  campusExamSource,
+  campusExamWhen,
+  examTone,
+} from "../ui/exam-bits";
 
 export const metadata: Metadata = { title: "Home — Comet Study" };
 
@@ -48,6 +54,39 @@ export default async function DashboardPage() {
   const first = (user.name ?? user.email.split("@")[0]).split(" ")[0];
   const next = data.sessions[0] ?? null;
   const today = campusDate(now);
+
+  // Exams classmates reported in groups and ones on UTD's schedule, soonest first.
+  const upcomingExams = [
+    ...data.exams.map((e) => ({
+      key: `e-${e.id}`,
+      courseCode: e.courseCode,
+      label: e.label,
+      startsAt: e.startsAt,
+      endsAt: e.endsAt,
+      location: e.location,
+      href: `/groups/${e.groupId}?tab=exams`,
+      badge: { label: `${e.badge} · ${e.confirms}`, tone: examTone(e.badge) },
+      days: [campusDate(e.startsAt)],
+      when: formatTimeRange(e.startsAt, e.endsAt ?? e.startsAt),
+      relative: relativeDay(e.startsAt, now),
+    })),
+    ...data.campusExams.map((e) => ({
+      key: `u-${e.id}`,
+      courseCode: e.courseCode,
+      label: e.label,
+      startsAt: e.startsAt,
+      endsAt: e.endsAt,
+      location: e.location,
+      href: "/courses#exams",
+      badge: campusExamSource(e),
+      // A Testing Center exam shows on each day it can be taken.
+      days: campusExamDays(e),
+      when: e.allDay
+        ? `${campusExamWhen(e)}, book a time`
+        : formatTimeRange(e.startsAt, e.endsAt),
+      relative: campusExamRelative(e, now),
+    })),
+  ].sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime());
 
   // The next seven days: classes (weekly), sessions and exams, per day.
   const classBlocks = data.courses.flatMap((c) =>
@@ -78,15 +117,15 @@ export default async function DashboardPage() {
           detail: `${formatTimeRange(s.startsAt, s.endsAt)} · ${s.groupName}`,
           href: `/groups/${s.groupId}?tab=sessions`,
         })),
-      ...data.exams
-        .filter((e) => campusDate(e.startsAt) === date)
+      ...upcomingExams
+        .filter((e) => e.days.includes(date))
         .map((e) => ({
-          key: `e-${e.id}`,
+          key: e.key,
           kind: "exam" as const,
-          start: campusMinutes(e.startsAt),
+          start: e.days.length > 1 ? 0 : campusMinutes(e.startsAt),
           label: `${e.courseCode} ${e.label}`,
-          detail: `${formatTimeRange(e.startsAt, e.endsAt ?? e.startsAt)}${e.location ? ` · ${e.location}` : ""}`,
-          href: `/groups/${e.groupId}?tab=exams`,
+          detail: `${e.when}${e.location ? ` · ${e.location}` : ""}`,
+          href: e.href,
         })),
     ];
     return { date, noon, items };
@@ -94,7 +133,7 @@ export default async function DashboardPage() {
   const weekSessions = data.sessions.filter(
     (s) => s.startsAt < new Date(now.getTime() + 7 * 86400000),
   ).length;
-  const nextExam = data.exams[0];
+  const nextExam = upcomingExams[0];
 
   const summary = [
     weekSessions
@@ -103,7 +142,7 @@ export default async function DashboardPage() {
         ? "No sessions on the books this week"
         : `${data.courses.length} ${data.courses.length === 1 ? "course" : "courses"} this term and no group yet — let’s fix that`,
     nextExam
-      ? `${nextExam.courseCode} ${nextExam.label} ${relativeDay(nextExam.startsAt, now)}`
+      ? `${nextExam.courseCode} ${nextExam.label} ${nextExam.relative}`
       : null,
   ]
     .filter(Boolean)
@@ -388,22 +427,20 @@ export default async function DashboardPage() {
         </Panel>
 
         <Panel title="Exams" icon="exam" id="exams">
-          {data.exams.length ? (
+          {upcomingExams.length ? (
             <ul className="exam-mini">
-              {data.exams.slice(0, 5).map((exam) => (
-                <li key={exam.id}>
-                  <Link href={`/groups/${exam.groupId}?tab=exams`}>
+              {upcomingExams.slice(0, 5).map((exam) => (
+                <li key={exam.key}>
+                  <Link href={exam.href}>
                     <span className="exam-mini-date">
                       <strong>{formatDay(exam.startsAt).split(", ")[1]}</strong>
-                      <span>{relativeDay(exam.startsAt, now)}</span>
+                      <span>{exam.relative}</span>
                     </span>
                     <span className="exam-mini-body">
                       <strong>
                         {exam.courseCode} {exam.label}
                       </strong>
-                      <Badge tone={examTone(exam.badge)}>
-                        {exam.badge} · {exam.confirms}
-                      </Badge>
+                      <Badge tone={exam.badge.tone}>{exam.badge.label}</Badge>
                     </span>
                   </Link>
                 </li>
@@ -411,8 +448,8 @@ export default async function DashboardPage() {
             </ul>
           ) : (
             <Empty title="No exams tracked">
-              Add exam dates inside a group; classmates confirm them so everyone
-              trusts the date.
+              Add your sections to see your registrar final, or add exam dates
+              inside a group so classmates can confirm them.
             </Empty>
           )}
         </Panel>

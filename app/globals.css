@@ -266,10 +266,12 @@ html::-webkit-scrollbar {
 }
 
 /* Comet cursor (native pointer hidden only while the canvas cursor runs) */
+/* Above every layer (dropdowns, dialogs): it takes no pointer events, and
+   the native pointer is hidden, so anything drawn over it hides the cursor. */
 .comet-cursor {
   position: fixed;
   inset: 0;
-  z-index: 80;
+  z-index: 1000;
   width: 100%;
   height: 100%;
   pointer-events: none;
@@ -2812,5 +2814,206 @@ kbd {
     position: relative;
     top: auto;
     padding-bottom: 16px;
+  }
+}
+
+/* ---------- Section picker (set a section on a course you have) ---------- */
+.sp {
+  margin-top: 10px;
+}
+.sp-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 6px 6px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition:
+    border-color 0.25s var(--ease),
+    color 0.25s var(--ease),
+    background 0.25s var(--ease),
+    transform 0.25s var(--ease);
+}
+.sp-trigger:hover {
+  border-color: rgba(116, 199, 255, 0.55);
+  background: rgba(116, 199, 255, 0.08);
+  color: var(--ink);
+  transform: translateY(-1px);
+}
+.sp-trigger.is-empty {
+  border-color: rgba(255, 195, 138, 0.45);
+  color: var(--comet);
+  box-shadow: 0 0 0 0 rgba(255, 195, 138, 0.35);
+  animation: sp-nudge 2.6s var(--ease) infinite;
+}
+@keyframes sp-nudge {
+  0%,
+  60%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 195, 138, 0);
+  }
+  30% {
+    box-shadow: 0 0 0 6px rgba(255, 195, 138, 0.12);
+  }
+}
+.sp-plus {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--grad-btn);
+  color: #fff;
+  font-size: 13px;
+  line-height: 1;
+}
+.sp-panel {
+  overflow: hidden;
+}
+.sp-inner {
+  display: grid;
+  gap: 12px;
+  margin-top: 4px;
+  padding: 14px;
+  border: 1px solid rgba(116, 199, 255, 0.22);
+  border-radius: 18px;
+  background:
+    radial-gradient(
+      120% 80% at 0% 0%,
+      rgba(139, 123, 255, 0.12),
+      transparent 60%
+    ),
+    rgba(8, 10, 24, 0.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+.sp-title {
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 500;
+}
+.sp-grid {
+  display: grid;
+  gap: 6px;
+  max-height: 260px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 2px;
+}
+.sp-option {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.02);
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    background 0.2s,
+    transform 0.2s var(--ease);
+}
+.sp-option:hover {
+  border-color: var(--line-strong);
+  transform: translateX(2px);
+}
+.sp-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.sp-option:has(input:focus-visible) {
+  outline: 2px solid var(--sky);
+  outline-offset: 2px;
+}
+.sp-option.is-on {
+  border-color: rgba(116, 199, 255, 0.7);
+  background: linear-gradient(
+    100deg,
+    rgba(125, 107, 255, 0.18),
+    rgba(67, 197, 232, 0.1)
+  );
+  box-shadow: 0 0 24px -8px rgba(116, 199, 255, 0.6);
+}
+.sp-num {
+  font-size: 16px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.sp-detail {
+  display: grid;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.35;
+}
+.sp-detail span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sp-detail em {
+  color: var(--faint);
+  font-style: normal;
+}
+.sp-flag {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(255, 143, 156, 0.14);
+  color: #ffb3bd;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.sp-loading {
+  display: flex;
+  gap: 6px;
+  padding: 6px 0;
+}
+.sp-loading i {
+  width: 34%;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.03),
+    rgba(255, 255, 255, 0.09),
+    rgba(255, 255, 255, 0.03)
+  );
+  background-size: 200% 100%;
+  animation: sp-shimmer 1.2s linear infinite;
+}
+@keyframes sp-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+.sp-empty,
+.sp-error {
+  color: var(--muted);
+  font-size: 13px;
+}
+.sp-error {
+  color: var(--danger);
+}
+.sp-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sp-trigger.is-empty,
+  .sp-loading i {
+    animation: none;
   }
 }

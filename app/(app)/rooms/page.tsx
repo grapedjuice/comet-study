@@ -23,7 +23,7 @@ import {
   isDateString,
   TZ_LABEL,
 } from "@/lib/time";
-import { Badge, Empty, PageHeader, Panel } from "../ui/bits";
+import { Empty, PageHeader, Panel } from "../ui/bits";
 import { GlassSelect } from "../ui/glass-select";
 import { Icon } from "../ui/icons";
 
@@ -231,19 +231,24 @@ export default async function RoomsPage({
           ) : null}
           <p className="fine-print disclaimer">{ROOM_DISCLAIMER}</p>
           {shown.length ? (
-            <ul className="room-list">
-              {shown.map((room) => (
-                <RoomRow
-                  key={room.key}
-                  room={room}
-                  from={from}
-                  to={to}
-                  date={date}
-                  group={group}
-                  myGroups={myGroups}
-                />
-              ))}
-            </ul>
+            <>
+              <RoomScale />
+              <ul className="rr-list">
+                {shown.map((room, index) => (
+                  <RoomRow
+                    key={room.key}
+                    room={room}
+                    from={from}
+                    to={to}
+                    date={date}
+                    nowMinute={date === today ? nowMinute : null}
+                    group={group}
+                    myGroups={myGroups}
+                    index={index}
+                  />
+                ))}
+              </ul>
+            </>
           ) : (
             <Empty title="No known free rooms for that window">
               Try a shorter window, another building, or a smaller size.
@@ -265,76 +270,121 @@ export default async function RoomsPage({
 
 const SPAN = CLOSE_MINUTE - OPEN_MINUTE;
 const pct = (minute: number) =>
-  `${(((minute - OPEN_MINUTE) / SPAN) * 100).toFixed(2)}%`;
+  `${(((Math.min(Math.max(minute, OPEN_MINUTE), CLOSE_MINUTE) - OPEN_MINUTE) / SPAN) * 100).toFixed(2)}%`;
+const span = (from: number, to: number) => ({
+  left: pct(from),
+  width: `calc(${pct(to)} - ${pct(from)})`,
+});
+const TICKS = [8, 11, 14, 17, 20, 23].map((h) => h * 60);
+
+function hours(minutes: number) {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return h ? (m ? `${h}h ${m}m` : `${h}h`) : `${m}m`;
+}
+
+/** Hour labels and a legend above the list, aligned with each row's track. */
+function RoomScale() {
+  return (
+    <div className="rr-scale" aria-hidden="true">
+      <div className="rr-legend">
+        <span className="lg-free">Free stretch</span>
+        <span className="lg-busy">Booked</span>
+        <span className="lg-want">Your time</span>
+      </div>
+      <div className="rr-ticks">
+        {TICKS.map((t) => (
+          <span key={t} style={{ left: pct(t) }}>
+            {formatClock(t)}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function RoomRow({
   room,
   from,
   to,
   date,
+  nowMinute,
   group,
   myGroups,
+  index,
 }: {
   room: RoomResult;
   from: number;
   to: number;
   date: string;
+  nowMinute: number | null;
   group?: { id: string; name: string };
   myGroups: { id: string; name: string; courseCode: string }[];
+  index: number;
 }) {
   const label = `${room.building} ${room.room}`;
   const pick = (groupId: string) =>
     `/groups/${groupId}?tab=sessions&room=${encodeURIComponent(label)}&date=${date}&start=${hhmm(from)}&end=${hhmm(to)}`;
+  const open = room.freeUntil >= CLOSE_MINUTE;
   return (
-    <li className="room-row">
-      <div className="room-name">
+    <li
+      className="rr"
+      style={{ "--i": Math.min(index, 12) } as React.CSSProperties}
+    >
+      <div className="rr-id">
+        <span className="rr-bldg">{room.building}</span>
+        <div className="rr-name">
+          <p>{room.room}</p>
+          <span>{room.buildingName ?? "Campus building"}</span>
+        </div>
+      </div>
+      <div className="rr-free">
         <p>
-          {room.building} <strong>{room.room}</strong>
+          {open ? (
+            <>
+              Free <strong>rest of the day</strong>
+            </>
+          ) : (
+            <>
+              Free until <strong>{formatClock(room.freeUntil)}</strong>
+            </>
+          )}
         </p>
-        <span>{room.buildingName ?? "Campus building"}</span>
+        <span>
+          {room.capacity ? `${room.capacity} seats` : "Size unknown"}
+          {" · "}
+          {hours(room.freeUntil - Math.max(room.freeFrom, from))} open
+          {room.nextBusy?.label ? ` · then ${room.nextBusy.label}` : ""}
+          {room.tracked ? "" : " · no bookings on record"}
+        </span>
       </div>
-      <div className="room-facts">
-        <Badge tone="good">
-          Free {formatClock(room.freeFrom)}–{formatClock(room.freeUntil)}
-        </Badge>
-        <span>{room.capacity ? `${room.capacity} seats` : "Size unknown"}</span>
-        {room.tracked ? null : <span>No bookings on record today</span>}
-        {room.nextBusy ? (
-          <span>
-            Next: {room.nextBusy.label ?? "booked"} at{" "}
-            {formatClock(room.nextBusy.start)}
-          </span>
-        ) : null}
+      <div className="rr-track" aria-hidden="true">
+        <div className="rr-bar">
+          <i className="rr-open" style={span(room.freeFrom, room.freeUntil)} />
+          {room.busy.map((b, i) => (
+            <i key={i} className="rr-busy" style={span(b.start, b.end)} />
+          ))}
+          <i className="rr-want" style={span(from, to)} />
+          {nowMinute !== null &&
+          nowMinute > OPEN_MINUTE &&
+          nowMinute < CLOSE_MINUTE ? (
+            <i className="rr-now" style={{ left: pct(nowMinute) }} />
+          ) : null}
+        </div>
       </div>
-      <div className="room-timeline" aria-hidden="true">
-        {room.busy.map((b, i) => (
-          <i
-            key={i}
-            className="busy"
-            style={{
-              left: pct(Math.max(b.start, OPEN_MINUTE)),
-              width: `calc(${pct(Math.min(b.end, CLOSE_MINUTE))} - ${pct(Math.max(b.start, OPEN_MINUTE))})`,
-            }}
-          />
-        ))}
-        <i
-          className="want"
-          style={{ left: pct(from), width: `calc(${pct(to)} - ${pct(from)})` }}
-        />
-      </div>
-      <div className="room-action">
+      <div className="rr-action">
         {group ? (
           <Link className="button primary small" href={pick(group.id)}>
-            Use for {group.name}
+            Use for {group.name} <span aria-hidden="true">→</span>
           </Link>
         ) : myGroups.length === 1 ? (
-          <Link className="button ghost small" href={pick(myGroups[0].id)}>
-            Plan a session here
+          <Link className="rr-cta" href={pick(myGroups[0].id)}>
+            Plan a session <span aria-hidden="true">→</span>
           </Link>
         ) : myGroups.length ? (
           <details className="menu">
-            <summary className="button ghost small">
-              Plan a session here
+            <summary className="rr-cta">
+              Plan a session <span aria-hidden="true">→</span>
             </summary>
             <div className="menu-list">
               {myGroups.map((g) => (

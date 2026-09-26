@@ -3,6 +3,7 @@ import {
   boolean,
   check,
   customType,
+  date,
   index,
   integer,
   pgTable,
@@ -300,6 +301,56 @@ export const groupExams = pgTable(
     updatedAt: updated(),
   },
   (table) => [index("group_exams_group_idx").on(table.groupId, table.startsAt)],
+);
+
+// Final-exam periods per term, as published on the registrar's
+// Final Exam Assignments page ("Full term and second 8-week classes").
+export const examWindows = pgTable(
+  "exam_windows",
+  {
+    term: text("term").notNull(),
+    label: text("label").notNull(),
+    startsOn: date("starts_on", { mode: "string" }).notNull(),
+    endsOn: date("ends_on", { mode: "string" }).notNull(),
+    sourceUrl: text("source_url").notNull(),
+    syncedAt: timestamp("synced_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [primaryKey({ columns: [table.term, table.label] })],
+);
+
+// Exam dates from public UT Dallas sources: the registrar's final-exam slot
+// for each section and rooms departments book for midterms (room schedule,
+// via Nebula), and Testing Center exams students book a time for
+// (RegisterBlast). Replaced on every sync.
+export const campusExams = pgTable(
+  "campus_exams",
+  {
+    id: text("id").primaryKey(), // hash of the identifying fields, stable across syncs
+    term: text("term").notNull(),
+    courseCode: text("course_code").notNull(),
+    sectionNumber: text("section_number"), // null: every section of the course
+    kind: text("kind").notNull(), // final | midterm | quiz
+    label: text("label").notNull(),
+    startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
+    endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
+    location: text("location"),
+    // Testing Center exams span whole days (starts_at/ends_at at campus
+    // midnight); students book a time on one of the open dates.
+    allDay: boolean("all_day").notNull().default(false),
+    openDates: text("open_dates").array(), // "2026-12-11", when known
+    bookingUrl: text("booking_url"),
+    source: text("source").notNull(), // registrar | department | testing-center
+    sourceName: text("source_name").notNull(), // the listing as published
+    syncedAt: timestamp("synced_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("campus_exams_course_term_idx").on(table.courseCode, table.term),
+    index("campus_exams_starts_idx").on(table.startsAt),
+  ],
 );
 
 export const examConfirmations = pgTable(

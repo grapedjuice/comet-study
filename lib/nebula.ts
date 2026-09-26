@@ -20,6 +20,8 @@ const Course = z.object({
 export type NebulaCourse = z.infer<typeof Course>;
 
 const Meeting = z.object({
+  start_date: z.string().nullish(),
+  end_date: z.string().nullish(),
   meeting_days: z.array(z.string()).nullish(),
   start_time: z.string().nullish(),
   end_time: z.string().nullish(),

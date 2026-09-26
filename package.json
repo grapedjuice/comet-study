@@ -17,6 +17,7 @@
     "db:seed": "node --env-file-if-exists=.env --import tsx scripts/seed.ts",
     "db:dev": "node --import tsx scripts/dev-db.ts",
     "catalog:sync": "node --env-file-if-exists=.env --import tsx scripts/catalog-sync.ts",
+    "exams:sync": "node --env-file-if-exists=.env --import tsx scripts/exams-sync.ts",
     "api:generate": "tsx scripts/generate-openapi.ts",
     "api:check": "tsx scripts/generate-openapi.ts --check",
     "format": "prettier --write .",

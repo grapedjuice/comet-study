@@ -7,6 +7,7 @@ Deployed 2026-09-24 at https://comet-study.vercel.app (Vercel Hobby, project `co
 - Secrets (`AUTH_SECRET`, `CRON_SECRET`, `NEBULA_API_KEY`) are stored as sensitive Vercel env vars for production and preview. `APP_URL=https://comet-study.vercel.app`, `DATA_MODE=live`.
 - Email: `EMAIL_PROVIDER=gmail` (production only) sends sign-in links through Gmail SMTP using `GMAIL_USER` + `GMAIL_APP_PASSWORD` (sensitive), about 500/day. Previews keep `EMAIL_PROVIDER=disabled`. With a domain later, switch to `resend` (`RESEND_API_KEY`, `EMAIL_FROM`).
 - Catalog: Vercel Cron calls `/api/v1/cron/catalog` Mondays 09:00 UTC with `CRON_SECRET`; searches also refresh it when older than 7 days.
+- Exams: Vercel Cron calls `/api/v1/cron/exams` daily 10:30 UTC with `CRON_SECRET` (registrar exam windows, the room schedule via ~90 Nebula `/astra` day reads plus a few section lookups, and the Testing Center's RegisterBlast list: 7 page reads plus up to 120 open-day lookups; ~15–30 s). Run it by hand with `npm run exams:sync`.
 
 ## Required production controls
 

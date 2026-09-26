@@ -36,6 +36,13 @@
       "when": 1790303556217,
       "tag": "0004_dashboard",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790383782147,
+      "tag": "0005_campus_exams",
+      "breakpoints": true
     }
   ]
 }
