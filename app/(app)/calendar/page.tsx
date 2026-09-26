@@ -268,6 +268,7 @@ export default async function CalendarPage({
           <Link
             className="icon-button"
             href={`/calendar?view=${view}&at=${prev}`}
+            scroll={false}
             aria-label={`Previous ${view}`}
             transitionTypes={["cal-prev"]}
             prefetch
@@ -277,6 +278,7 @@ export default async function CalendarPage({
           <Link
             className="button ghost small"
             href={`/calendar?view=${view}`}
+            scroll={false}
             transitionTypes={toToday}
           >
             Today
@@ -284,6 +286,7 @@ export default async function CalendarPage({
           <Link
             className="icon-button"
             href={`/calendar?view=${view}&at=${next}`}
+            scroll={false}
             aria-label={`Next ${view}`}
             transitionTypes={["cal-next"]}
             prefetch
@@ -297,6 +300,7 @@ export default async function CalendarPage({
               key={v}
               className={view === v ? "is-on" : ""}
               href={`/calendar?view=${v}&at=${anchor}`}
+              scroll={false}
               aria-current={view === v ? "page" : undefined}
               transitionTypes={
                 view === v
@@ -476,6 +480,7 @@ export default async function CalendarPage({
                     <Link
                       key={d}
                       href={`/calendar?view=week&at=${d}`}
+                      scroll={false}
                       transitionTypes={[`cal-in-${Math.floor(i / 7)}`]}
                       className={["mg-day", ...flags].join(" ")}
                       data-extra={Math.max(0, all.length - 6)}

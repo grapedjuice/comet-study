@@ -79,6 +79,7 @@ export default async function MatchPage({
             className={`chip-link${c.code === course.code ? " is-on" : ""}`}
             href={`/match?course=${encodeURIComponent(c.code)}`}
             aria-current={c.code === course.code ? "page" : undefined}
+            scroll={false}
           >
             {c.code}
           </Link>

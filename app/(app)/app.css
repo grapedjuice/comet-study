@@ -2980,6 +2980,31 @@ a.item-row:hover .item-go {
   background: var(--comet);
 }
 /* The agenda is the accessible week; it's the visible one on small screens. */
+/* The phone's top and bottom bars stay put, above anything a view
+   transition animates (otherwise the zooming calendar paints over them). */
+.app-topbar {
+  view-transition-name: app-topbar;
+}
+.app-tabbar {
+  view-transition-name: app-tabbar;
+}
+::view-transition-group(app-topbar),
+::view-transition-group(app-tabbar) {
+  z-index: 100;
+  animation: none;
+}
+::view-transition-old(app-topbar),
+::view-transition-old(app-tabbar) {
+  display: none;
+}
+::view-transition-new(app-topbar),
+::view-transition-new(app-tabbar) {
+  animation: none;
+  /* Snapshots drop the bars' backdrop blur; a near-opaque backing stands in
+     so the page doesn't show through for the length of the transition. */
+  background: rgba(6, 7, 16, 0.94);
+}
+
 /* ---------- Calendar zoom (week ⇄ month view transitions) ---------- */
 /* Wrappers the transitions snapshot; they keep the page grid's spacing. */
 .cal-stage,

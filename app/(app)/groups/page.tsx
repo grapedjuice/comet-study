@@ -157,6 +157,7 @@ export default async function GroupsPage({
             className={`chip-link${course ? "" : " is-on"}`}
             href="/groups"
             aria-current={course ? undefined : "page"}
+            scroll={false}
           >
             All courses
           </Link>
@@ -166,6 +167,7 @@ export default async function GroupsPage({
               className={`chip-link${course === c.code ? " is-on" : ""}`}
               href={`/groups?course=${encodeURIComponent(c.code)}`}
               aria-current={course === c.code ? "page" : undefined}
+              scroll={false}
             >
               {c.code}
             </Link>
