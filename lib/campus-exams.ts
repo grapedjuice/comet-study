@@ -241,6 +241,9 @@ function examId(exam: ExamFields) {
 
 function exam(fields: ExamFields): CampusExam | null {
   if (fields.endsAt <= fields.startsAt) return null;
+  // A listing that just says "Final" reads like the registrar's "Final exam".
+  if (/^final$/i.test(fields.label))
+    fields = { ...fields, label: "Final exam" };
   return {
     id: examId(fields),
     allDay: false,

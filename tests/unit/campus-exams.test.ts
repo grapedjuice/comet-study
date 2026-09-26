@@ -264,16 +264,16 @@ describe("Testing Center exams", () => {
 
   it("reads courses, sections, label and date span from each title", () => {
     expect(summary).toEqual([
-      "CE 3161.091 Final [final] 2026-12-11..2026-12-15",
-      "CE 3161.092 Final [final] 2026-12-11..2026-12-15",
-      "EE 3161.091 Final [final] 2026-12-11..2026-12-15",
-      "EE 3161.092 Final [final] 2026-12-11..2026-12-15",
+      "CE 3161.091 Final exam [final] 2026-12-11..2026-12-15",
+      "CE 3161.092 Final exam [final] 2026-12-11..2026-12-15",
+      "EE 3161.091 Final exam [final] 2026-12-11..2026-12-15",
+      "EE 3161.092 Final exam [final] 2026-12-11..2026-12-15",
       "CS 2337.003 Midterm [midterm] 2026-10-16..2026-10-16",
       "BMEN 4388.001 Training Exam [midterm] 2026-11-13..2026-11-21",
       "BMEN 4388.002 Training Exam [midterm] 2026-11-13..2026-11-21",
       "MECH 4381.001 Training Exam [midterm] 2026-11-13..2026-11-21",
       "CRIM 3325.0W1 Quiz 1 (optional) [quiz] 2026-10-08..2026-10-10",
-      "ITSS 3300.001 Final [final] 2026-12-03..2026-12-04",
+      "ITSS 3300.001 Final exam [final] 2026-12-03..2026-12-04",
       "PSCI 4319.001 Exam 3 [midterm] 2026-12-07..2026-12-09",
       "ENGR 2300.003 Exam 1 [midterm] 2026-10-02..2026-10-03",
       "ENGR 2300.005 Exam 1 [midterm] 2026-10-02..2026-10-03",
