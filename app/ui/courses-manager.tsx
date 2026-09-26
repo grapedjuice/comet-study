@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { SectionPicker } from "./section-picker";
@@ -70,6 +70,7 @@ export default function CoursesManager({
   refreshOnChange?: boolean;
 }) {
   const router = useRouter();
+  const reduce = useReducedMotion();
   const [courses, setCourses] = useState(initialCourses);
   useEffect(() => {
     onCoursesChange?.(courses);
@@ -324,7 +325,7 @@ export default function CoursesManager({
             role="tabpanel"
             id="panel-search"
             aria-labelledby="tab-search"
-            initial={{ opacity: 0, x: -16 }}
+            initial={reduce ? false : { opacity: 0, x: -16 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
           >
@@ -458,7 +459,7 @@ export default function CoursesManager({
             role="tabpanel"
             id="panel-import"
             aria-labelledby="tab-import"
-            initial={{ opacity: 0, x: 16 }}
+            initial={reduce ? false : { opacity: 0, x: 16 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
           >
