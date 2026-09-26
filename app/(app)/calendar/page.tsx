@@ -36,6 +36,13 @@ const monthFmt = new Intl.DateTimeFormat("en-US", {
   timeZone: "UTC",
 });
 
+/** "10–10:50am", or "11:30am–12:45pm" when the halves differ (like formatTimeRange). */
+function clockRange(start: number, end: number) {
+  const a = formatClock(start);
+  const b = formatClock(end);
+  return `${a.slice(-2) === b.slice(-2) ? a.slice(0, -2) : a}–${b}`;
+}
+
 type Item = {
   key: string;
   kind: "class" | "session" | "exam";
@@ -88,7 +95,7 @@ export default async function CalendarPage({
           start: b.start,
           end: b.end,
           title: b.courseCode,
-          detail: `${formatClock(b.start)}–${formatClock(b.end)}${b.where ? ` · ${b.where}` : ""}`,
+          detail: `${clockRange(b.start, b.end)}${b.where ? ` · ${b.where}` : ""}`,
           href: "/courses",
         });
   }
@@ -293,9 +300,13 @@ export default async function CalendarPage({
                           tabIndex={-1}
                           className={`wg-event kind-${item.kind}${item.cancelled ? " is-cancelled" : ""}`}
                           style={{ top: `${top}%`, height: `${height}%` }}
+                          title={`${item.title} · ${item.detail}`}
                         >
                           <strong>{item.title}</strong>
-                          <span>{item.detail}</span>
+                          {/* One line per part; short blocks drop whole lines. */}
+                          {item.detail.split(" · ").map((part, i) => (
+                            <span key={i}>{part}</span>
+                          ))}
                         </Link>
                       );
                     })}

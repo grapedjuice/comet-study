@@ -53,6 +53,7 @@ import {
   examTone,
 } from "../../ui/exam-bits";
 import { ActionForm, ConfirmSubmit, SubmitButton } from "../../ui/forms";
+import { GlassDate, GlassTime } from "../../ui/glass-pickers";
 import { GlassSelect } from "../../ui/glass-select";
 import { Icon } from "../../ui/icons";
 import { SmoothInput, SmoothTextarea } from "../../../ui/smooth-input";
@@ -590,33 +591,28 @@ export default async function GroupPage({
                     />
                   </label>
                 </div>
-                <label className="form-field">
-                  <span className="field-label">Date</span>
-                  <input
-                    className="field"
-                    type="date"
-                    name="date"
-                    required
-                    min={campusDate(now)}
-                  />
-                </label>
+                <GlassDate
+                  label="Date"
+                  name="date"
+                  required
+                  min={campusDate(now)}
+                />
                 <div className="form-row">
-                  <label className="form-field">
-                    <span className="field-label">Starts</span>
-                    <input
-                      className="field"
-                      type="time"
-                      name="start"
-                      required
-                      defaultValue="10:00"
-                    />
-                  </label>
-                  <label className="form-field">
-                    <span className="field-label">
-                      Ends <em>optional</em>
-                    </span>
-                    <input className="field" type="time" name="end" />
-                  </label>
+                  <GlassTime
+                    label="Starts"
+                    name="start"
+                    required
+                    defaultValue="10:00"
+                  />
+                  <GlassTime
+                    label={
+                      <>
+                        Ends <em>optional</em>
+                      </>
+                    }
+                    name="end"
+                    placeholder="Add a time"
+                  />
                 </div>
                 <label className="form-field">
                   <span className="field-label">
@@ -954,40 +950,28 @@ function SessionForm({ groupId, search }: { groupId: string; search: Search }) {
           defaultValue="Study session"
         />
       </label>
-      <label className="form-field">
-        <span className="field-label">Date</span>
-        <input
-          className="field"
-          type="date"
-          name="date"
-          required
-          min={today}
-          defaultValue={date}
-        />
-      </label>
+      <GlassDate
+        label="Date"
+        name="date"
+        required
+        min={today}
+        defaultValue={date}
+      />
       <div className="form-row">
-        <label className="form-field">
-          <span className="field-label">From</span>
-          <input
-            className="field"
-            type="time"
-            name="start"
-            required
-            step={900}
-            defaultValue={time(search.start, "18:00")}
-          />
-        </label>
-        <label className="form-field">
-          <span className="field-label">To</span>
-          <input
-            className="field"
-            type="time"
-            name="end"
-            required
-            step={900}
-            defaultValue={time(search.end, "19:30")}
-          />
-        </label>
+        <GlassTime
+          label="From"
+          name="start"
+          required
+          step={15}
+          defaultValue={time(search.start, "18:00")}
+        />
+        <GlassTime
+          label="To"
+          name="end"
+          required
+          step={15}
+          defaultValue={time(search.end, "19:30")}
+        />
       </div>
       <label className="form-field">
         <span className="field-label">Where</span>

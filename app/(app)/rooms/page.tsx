@@ -24,6 +24,7 @@ import {
   TZ_LABEL,
 } from "@/lib/time";
 import { Empty, PageHeader, Panel } from "../ui/bits";
+import { GlassTime } from "../ui/glass-pickers";
 import { GlassSelect } from "../ui/glass-select";
 import { Icon } from "../ui/icons";
 
@@ -142,30 +143,22 @@ export default async function RoomsPage({
                   : formatDay(campusToUtc(d, "12:00")!),
           }))}
         />
-        <label className="form-field">
-          <span className="field-label">From</span>
-          <input
-            className="field"
-            type="time"
-            name="from"
-            step={900}
-            min="07:00"
-            max="22:45"
-            defaultValue={hhmm(from)}
-          />
-        </label>
-        <label className="form-field">
-          <span className="field-label">Until</span>
-          <input
-            className="field"
-            type="time"
-            name="to"
-            step={900}
-            min="07:15"
-            max="23:00"
-            defaultValue={hhmm(to)}
-          />
-        </label>
+        <GlassTime
+          label="From"
+          name="from"
+          step={15}
+          min="07:00"
+          max="22:45"
+          defaultValue={hhmm(from)}
+        />
+        <GlassTime
+          label="Until"
+          name="to"
+          step={15}
+          min="07:15"
+          max="23:00"
+          defaultValue={hhmm(to)}
+        />
         <GlassSelect
           label="Building"
           name="building"
