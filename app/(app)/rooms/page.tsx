@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Form from "next/form";
 import Link from "next/link";
 import { isUuid } from "@/lib/app-errors";
 import { requireStudent } from "@/lib/app-session";
@@ -127,7 +128,8 @@ export default async function RoomsPage({
         </p>
       </PageHeader>
 
-      <form className="room-search panel" action="/rooms" method="get">
+      {/* Client-side, and keeps your place instead of reloading to the top. */}
+      <Form className="room-search panel" action="/rooms" scroll={false}>
         {group ? <input type="hidden" name="group" value={group.id} /> : null}
         <GlassSelect
           label="Day"
@@ -187,7 +189,7 @@ export default async function RoomsPage({
         <button className="button primary" type="submit">
           <Icon name="search" size={18} /> <span>Search</span>
         </button>
-      </form>
+      </Form>
 
       {!nebula ? (
         <Panel>

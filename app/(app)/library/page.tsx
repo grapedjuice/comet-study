@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Form from "next/form";
 import { isUuid } from "@/lib/app-errors";
 import { requireStudent } from "@/lib/app-session";
 import { listMyGroups } from "@/lib/groups";
@@ -57,10 +58,11 @@ export default async function LibraryPage({
 
       <div className="split">
         <div className="split-main">
-          <form
+          {/* Client-side, and keeps your place instead of reloading to the top. */}
+          <Form
             className="library-search panel"
             action="/library"
-            method="get"
+            scroll={false}
             role="search"
           >
             <label className="search-field">
@@ -110,7 +112,7 @@ export default async function LibraryPage({
             <button className="button primary small" type="submit">
               Filter
             </button>
-          </form>
+          </Form>
           <Panel
             title={
               filtered

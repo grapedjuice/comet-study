@@ -5,9 +5,11 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 
 /**
- * Same-page links glide through Lenis: hash links to their section, and links
- * to the current page (the logo on the home page) back to the top. New routes
- * start at the top instead of inheriting the smoothed scroll position.
+ * Same-page links glide through Lenis: hash links to their section, and the
+ * logo back to the top. Any other link to the page you're already on (the
+ * active tab, a selected filter chip) does nothing, rather than letting the
+ * router jump to the top. New routes start at the top instead of inheriting
+ * the smoothed scroll position.
  */
 function AnchorGlide() {
   const lenis = useLenis();
@@ -33,6 +35,7 @@ function AnchorGlide() {
         return;
       if (!url.hash) {
         event.preventDefault();
+        if (!link.classList.contains("wordmark")) return;
         if (location.hash) history.pushState(null, "", url.pathname);
         lenis.scrollTo(0, { duration: 1.4 });
         return;

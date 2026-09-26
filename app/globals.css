@@ -72,8 +72,9 @@ a {
   color: inherit;
 }
 
-a,
-button {
+/* No gray/blue flash on tap anywhere: labels, chips, summaries and the
+   rest too, not just links and buttons. Pressed states come from our CSS. */
+* {
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -217,6 +218,13 @@ body *::-webkit-scrollbar-corner {
 /* Native scrollbar is replaced by .scroll-rail */
 html::-webkit-scrollbar {
   display: none;
+}
+/* Touch screens scroll natively; there the rail would only sit over the
+   right edge of the page, eating taps and swipes. */
+@media (hover: none), (pointer: coarse) {
+  .scroll-rail {
+    display: none;
+  }
 }
 .scroll-rail {
   position: fixed;
@@ -2218,6 +2226,12 @@ a.eyebrow-pill {
   outline: none;
   border-color: rgba(139, 123, 255, 0.8);
   box-shadow: 0 0 0 4px rgba(139, 123, 255, 0.2);
+}
+/* Buttons styled as fields (dropdowns, date and time pickers) only ring for
+   the keyboard or while open, not after a tap or click. */
+button.field:focus:not(:focus-visible):not(.is-open) {
+  border-color: var(--line-strong);
+  box-shadow: none;
 }
 .field-hint {
   margin-top: 10px;
