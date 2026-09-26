@@ -57,7 +57,7 @@ test("landing provides real navigation and accurately describes preview access",
   await page.getByRole("link", { name: "Find my study group" }).click();
   await expect(page).toHaveURL(/\/sign-in$/);
   await page.getByLabel("UT Dallas email").fill("student@example.com");
-  await page.getByRole("button", { name: "Email me a sign-in link" }).click();
+  await page.getByRole("button", { name: "Get my sign-in link" }).click();
   await expect(page.getByRole("status")).toHaveText(
     "Use an eligible university email address",
   );

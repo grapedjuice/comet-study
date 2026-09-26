@@ -78,7 +78,9 @@ export async function POST(request: Request) {
     if (code === "RATE_LIMITED")
       return apiError(
         "RATE_LIMITED",
-        "Too many sign-in links were requested. Check your inbox or try again later.",
+        instant
+          ? "Too many sign-in links were requested. Try again later."
+          : "Too many sign-in links were requested. Check your inbox or try again later.",
         429,
       );
     if (code === "EMAIL_UNAVAILABLE")

@@ -18,15 +18,12 @@ const schema = z.object({
   APP_URL: origin,
   DATA_MODE: z.enum(["disabled", "fixture", "live"]).default("disabled"),
   EMAIL_PROVIDER: z
-    .enum(["disabled", "console", "resend", "sendgrid", "gmail"])
+    .enum(["disabled", "console", "resend", "sendgrid"])
     .default("disabled"),
   NEBULA_API_KEY: z.string().optional(),
   RESEND_API_KEY: z.string().optional(),
   SENDGRID_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().optional(),
-  // Gmail SMTP with an app password (EMAIL_PROVIDER=gmail); no domain needed.
-  GMAIL_USER: z.string().optional(),
-  GMAIL_APP_PASSWORD: z.string().optional(),
   // "on" skips the inbox: the sign-in page gets the link back as a button.
   // Anyone can then sign in as any eligible address, so it's opt-in.
   INSTANT_SIGNIN: z.enum(["on", "off"]).default("off"),
@@ -68,12 +65,6 @@ export function parseEnv(input: Record<string, string | undefined>): AppEnv {
     invalid.push("RESEND_API_KEY");
   if (env.EMAIL_PROVIDER === "sendgrid" && !env.SENDGRID_API_KEY?.trim())
     invalid.push("SENDGRID_API_KEY");
-  if (env.EMAIL_PROVIDER === "gmail") {
-    if (!z.email().safeParse(env.GMAIL_USER?.trim()).success)
-      invalid.push("GMAIL_USER");
-    if ((env.GMAIL_APP_PASSWORD ?? "").replace(/\s/g, "").length !== 16)
-      invalid.push("GMAIL_APP_PASSWORD");
-  }
   if (
     ["resend", "sendgrid"].includes(env.EMAIL_PROVIDER) &&
     !z.email().safeParse(env.EMAIL_FROM).success

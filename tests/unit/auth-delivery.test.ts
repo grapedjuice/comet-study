@@ -55,41 +55,6 @@ describe("verification delivery", () => {
     expect(body.text).toContain("/verify#token=raw-token");
   });
 
-  it("sends through Gmail SMTP from the configured account", async () => {
-    const sendMail = vi.fn(async () => ({}));
-    const env = parseEnv({
-      ...base,
-      EMAIL_PROVIDER: "gmail",
-      GMAIL_USER: "comet.signin@gmail.com",
-      GMAIL_APP_PASSWORD: "abcd efgh ijkl mnop",
-    });
-    await createDelivery(env, vi.fn(), sendMail)(input);
-    expect(sendMail).toHaveBeenCalledWith(
-      expect.objectContaining({
-        from: '"Comet Study" <comet.signin@gmail.com>',
-        to: "student@utdallas.edu",
-        text: expect.stringContaining("/verify#token=raw-token"),
-      }),
-    );
-    const failing = vi.fn(async () => {
-      throw new Error("535 bad credentials");
-    });
-    await expect(createDelivery(env, vi.fn(), failing)(input)).rejects.toThrow(
-      "EMAIL_UNAVAILABLE",
-    );
-  });
-
-  it("requires a Gmail address and 16-character app password", () => {
-    expect(() =>
-      parseEnv({
-        ...base,
-        EMAIL_PROVIDER: "gmail",
-        GMAIL_USER: "not-an-email",
-        GMAIL_APP_PASSWORD: "short",
-      }),
-    ).toThrow(/GMAIL_USER, GMAIL_APP_PASSWORD/);
-  });
-
   it("reports provider failures as unavailable", async () => {
     const fetchImpl = vi.fn(async () => new Response("no", { status: 500 }));
     const env = parseEnv({

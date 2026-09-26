@@ -124,8 +124,8 @@ export default function SignInPage() {
           ) : (
             <>
               <p className="auth-lede">
-                Sign in with your UT Dallas email. We’ll send a one-time link —
-                no password needed.
+                Sign in with your UT Dallas email to get a one-time link — no
+                password needed.
               </p>
               <form
                 className="auth-form"
@@ -149,8 +149,8 @@ export default function SignInPage() {
                   disabled={status === "loading"}
                 >
                   {status === "loading"
-                    ? "Sending…"
-                    : "Email me a sign-in link"}
+                    ? "Getting your link…"
+                    : "Get my sign-in link"}
                 </button>
                 {message ? (
                   <p className={`form-message ${status}`} role="status">
