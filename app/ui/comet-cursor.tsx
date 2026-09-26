@@ -10,7 +10,10 @@ import { useEffect, useRef } from "react";
  */
 const TRAIL = 26;
 const INTERACTIVE = "a, button, [role='button'], summary, label";
-const TEXT = "input, textarea, [contenteditable='true']";
+// Only fields you type into get the caret; a file input stretched over a
+// dropzone (or a checkbox) is something you click.
+const TEXT =
+  "input:not([type='file']):not([type='checkbox']):not([type='radio']):not([type='range']):not([type='button']):not([type='submit']):not([type='reset']):not([type='color']):not([type='image']), textarea, [contenteditable='true']";
 // Controls that open OS-drawn popups (pickers, file dialogs). While one is
 // open the page gets no pointer events, so the comet would freeze in place.
 const NATIVE_POPUP =
