@@ -385,10 +385,10 @@ export default async function HomePage() {
             <div className="privacy-note">
               <span>01</span>
               <div>
-                <h3>Try the demo privately.</h3>
+                <h3>Real classmates, shared carefully.</h3>
                 <p>
-                  It uses fictional classmates and example times. Your choices
-                  stay on this page; nothing is booked or sent.
+                  Everyone here signs in with a UT Dallas email. Outside your
+                  groups, people see only your first name and last initial.
                 </p>
               </div>
             </div>
@@ -405,10 +405,10 @@ export default async function HomePage() {
             <div className="privacy-note">
               <span>03</span>
               <div>
-                <h3>Schedule controls are still taking shape.</h3>
+                <h3>Your week stays yours.</h3>
                 <p>
-                  Group matching and availability sharing are in development.
-                  We’ll explain how those choices work before they’re available.
+                  Matches count the free hours you share with someone. Your
+                  weekly availability is never shown to anyone else.
                 </p>
               </div>
             </div>
