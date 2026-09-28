@@ -282,7 +282,7 @@ const document = {
   },
 };
 
-const path = resolve("docs/api/openapi.json");
+const path = resolve("openapi.json");
 const generated = JSON.stringify(document, null, 2) + "\n";
 if (process.argv.includes("--check")) {
   const existing = await readFile(path, "utf8").catch(() => "");

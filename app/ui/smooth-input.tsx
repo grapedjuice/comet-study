@@ -11,7 +11,7 @@ import {
 } from "react";
 
 /*
- * Smooth Input (docs/prompts/smooth-input.md): the native field keeps focus,
+ * Smooth Input: the native field keeps focus,
  * selection, IME, autofill and form submission, but its text is transparent.
  * A mirror layer underneath draws each letter as its own span, so new letters
  * drop into place, deleted ones fall away and a drawn caret glides between

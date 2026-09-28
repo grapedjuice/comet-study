@@ -3,7 +3,7 @@ import { z } from "zod";
 /**
  * Minimal Nebula Labs API client (https://api.utdnebula.com), server-only.
  * Contract verified live 2026-09-24: `{ status, message, data }` envelope,
- * `x-api-key` header, exact-match filters only (see docs/nebula-contract-research.md).
+ * `x-api-key` header, exact-match filters only.
  */
 const BASE = "https://api.utdnebula.com";
 

@@ -7,7 +7,7 @@ import { addDays, campusDate, campusToUtc, isDateString } from "./time";
 type Database = ReturnType<typeof createDatabaseClient>;
 
 /**
- * Official exam dates, from three public sources (see docs/data-sources.md):
+ * Official exam dates, from three public sources:
  * - the registrar's Final Exam Assignments page, for each term's final-exam
  *   periods;
  * - UT Dallas's room schedule (Ad Astra, served by Nebula's /astra feed),

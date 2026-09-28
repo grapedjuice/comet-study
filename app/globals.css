@@ -2712,7 +2712,7 @@ kbd {
   }
 }
 
-/* ---------- Smooth Input (docs/prompts/smooth-input.md) ---------- */
+/* ---------- Smooth Input ---------- */
 .smooth-field {
   position: relative;
   display: block;
