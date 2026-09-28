@@ -248,7 +248,7 @@ describe("Testing Center sync", () => {
     expect(result.testingCenterExams).toBe(4);
     const mine = await listMyCampusExams(db, ethics, from, to);
     expect(mine.map(describeExam)).toEqual([
-      "EE 3161.091 Final 2026-12-11T06:00:00.000Z UTD Testing Center",
+      "EE 3161.091 Final exam 2026-12-11T06:00:00.000Z UTD Testing Center",
       "CS 3345.001 Final exam 2026-12-14T15:00:00.000Z ECSS 2.203",
     ]);
     expect(mine[0]).toMatchObject({
