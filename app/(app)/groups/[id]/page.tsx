@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ViewTransition } from "react";
 import { isUuid } from "@/lib/app-errors";
 import { requireStudent } from "@/lib/app-session";
+import { assistantOpeners } from "@/lib/assistant";
 import {
   getGroup,
   listActivity,
@@ -54,6 +55,7 @@ import {
   Seats,
   SegPill,
 } from "../../ui/bits";
+import { Assistant } from "../../ui/assistant";
 import { RoomCombobox } from "../../ui/room-combobox";
 import {
   CampusExamItems,
@@ -75,6 +77,7 @@ export const metadata: Metadata = { title: "Group — Comet Study" };
 
 const TABS = [
   { id: "overview", label: "Overview" },
+  { id: "assistant", label: "Assistant" },
   { id: "sessions", label: "Sessions" },
   { id: "library", label: "Library" },
   { id: "exams", label: "Exams" },
@@ -107,7 +110,7 @@ export default async function GroupPage({
 }) {
   const [{ id }, search] = await Promise.all([params, searchParams]);
   if (!isUuid(id)) notFound();
-  const { db, user } = await requireStudent();
+  const { db, user, env } = await requireStudent();
   const group = await getGroup(db, user.id, id);
   if (!group || (group.status === "archived" && group.myStatus !== "active"))
     notFound();
@@ -126,6 +129,7 @@ export default async function GroupPage({
     resources,
     activity,
     invitable,
+    openers,
   ] = await Promise.all([
     listMembers(db, id),
     listGroupSessions(db, user.id, id),
@@ -139,6 +143,9 @@ export default async function GroupPage({
     listResources(db, user.id, { groupId: id }, tab === "library" ? 60 : 4),
     listActivity(db, id, 12),
     tab === "members" ? listInvitable(db, id) : Promise.resolve([]),
+    tab === "assistant" && env.ANTHROPIC_API_KEY
+      ? assistantOpeners(db, user.id, group.term, id)
+      : Promise.resolve([]),
   ]);
   const now = new Date();
   const upcoming = sessions.filter(
@@ -405,6 +412,22 @@ export default async function GroupPage({
                 </Panel>
               </aside>
             </div>
+          ) : null}
+
+          {tab === "assistant" ? (
+            env.ANTHROPIC_API_KEY ? (
+              <Assistant
+                groupId={id}
+                suggestions={openers}
+                scope={`${group.name}'s sessions, library, exam dates and when its ${active.length} members are free.`}
+              />
+            ) : (
+              <Panel title="Not connected" icon="spark" id="assistant-off">
+                <p className="muted-note">
+                  The study assistant isn’t connected on this server.
+                </p>
+              </Panel>
+            )
           ) : null}
 
           {tab === "sessions" ? (

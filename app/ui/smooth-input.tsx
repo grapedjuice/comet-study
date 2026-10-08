@@ -278,12 +278,19 @@ export const SmoothInput = forwardRef<HTMLInputElement, InputProps>(
 export const SmoothTextarea = forwardRef<
   HTMLTextAreaElement,
   React.TextareaHTMLAttributes<HTMLTextAreaElement>
->(function SmoothTextarea({ className, defaultValue, onInput, ...props }, ref) {
+>(function SmoothTextarea(
+  { className, defaultValue, value, onInput, ...props },
+  ref,
+) {
   const {
     native,
     onInput: track,
     mirror,
-  } = useSmooth(String(defaultValue ?? ""), true);
+  } = useSmooth(
+    String(value ?? defaultValue ?? ""),
+    true,
+    value === undefined ? undefined : String(value),
+  );
   useImperativeHandle(ref, () => native.current as HTMLTextAreaElement);
   return (
     <span className={`smooth-field multi ${className ?? ""}`}>
@@ -291,7 +298,7 @@ export const SmoothTextarea = forwardRef<
       <textarea
         {...props}
         ref={native as React.RefObject<HTMLTextAreaElement>}
-        defaultValue={defaultValue}
+        {...(value === undefined ? { defaultValue } : { value })}
         className="smooth-native"
         onInput={(event) => {
           track();

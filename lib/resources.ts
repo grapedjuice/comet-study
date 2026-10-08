@@ -132,7 +132,16 @@ export async function listResources(
       `(r.title ilike ${p} or r.description ilike ${p} or r.file_name ilike ${p})`,
     );
   }
-  values.push(limit);
+  return listResourcesWhere(db, where, values, limit);
+}
+
+/** The one listing query every resource read goes through, membership and all. */
+async function listResourcesWhere(
+  db: Database,
+  where: string[],
+  values: unknown[],
+  limit: number,
+) {
   const result = await db.pool.query<{
     id: string;
     group_id: string;
@@ -158,8 +167,8 @@ export async function listResources(
        left join users u on u.id = r.uploader_id
       where ${where.join(" and ")}
       order by r.created_at desc
-      limit $${values.length}`,
-    values,
+      limit $${values.length + 1}`,
+    [...values, limit],
   );
   return result.rows.map<Resource>((row) => ({
     id: row.id,
@@ -177,6 +186,21 @@ export async function listResources(
     uploaderName: row.uploader_name,
     createdAt: row.created_at,
   }));
+}
+
+/** One resource by id, only if the student is an active member of its group. */
+export async function getResource(
+  db: Database,
+  userId: string,
+  resourceId: string,
+) {
+  const [found] = await listResourcesWhere(
+    db,
+    ["m.user_id = $1", "m.status = 'active'", "r.id = $2"],
+    [userId, resourceId],
+    1,
+  );
+  return found ?? null;
 }
 
 export type ResourceInput = {

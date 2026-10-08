@@ -4823,3 +4823,509 @@ a.item-row:hover .item-go {
     animation: none;
   }
 }
+
+/* ---------- Study assistant ---------- */
+
+.assistant-page {
+  align-content: start;
+}
+
+/* The chat is one tall glass surface: a scrolling stream over a fixed
+   composer, so the page never scrolls underneath the conversation. */
+/* The height has to be bounded, not just a floor: the stream takes the wheel
+   (data-lenis-prevent) so the page won't scroll under it, which leaves a
+   content-sized panel with nothing to scroll and the top clipped. */
+.as {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-width: 0;
+  /* One column the whole chat lines up on: about 70 characters of prose. */
+  --as-col: 640px;
+  /* Sized to what the viewport has left under the page header, so the
+     composer is always reachable without scrolling the page to it. */
+  height: clamp(400px, calc(100dvh - 290px), 820px);
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: 26px;
+  background: var(--glass-strong);
+  box-shadow:
+    0 24px 60px -30px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(24px) saturate(140%);
+}
+.as-stream {
+  overflow-y: auto;
+  padding: clamp(18px, 2.4vw, 30px) clamp(14px, 2vw, 22px) 6px;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  /* Text thins out into the composer instead of being chopped by it. */
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 18px,
+    #000 calc(100% - 20px),
+    transparent 100%
+  );
+}
+.as-stream::-webkit-scrollbar {
+  display: none;
+}
+/* Leave room below the latest exchange so its question can reach the top. */
+.as:not(.is-empty) .as-stream::after {
+  content: "";
+  display: block;
+  height: 100%;
+}
+/* The panel keeps its height when the first question is sent, so nothing
+   jumps; only what's inside it changes. */
+.as.is-empty .as-stream {
+  display: grid;
+  place-items: center;
+}
+.as-turns {
+  display: grid;
+  gap: 26px;
+  max-width: var(--as-col);
+  margin: 0 auto;
+}
+/* A question starts a new exchange, so give it more air above than the reply
+   it belongs to gets below. */
+.as-turns .as-ask:not(:first-child) {
+  margin-top: 10px;
+}
+
+/* Empty state */
+.as-intro {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  max-width: 460px;
+  padding: 24px 0;
+  text-align: center;
+}
+.as-orb {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--grad);
+  box-shadow: 0 0 46px -6px rgba(125, 107, 255, 0.75);
+  animation: as-breathe 5.5s ease-in-out infinite;
+}
+@keyframes as-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.07);
+    opacity: 1;
+  }
+}
+.as-intro h2 {
+  font-size: clamp(23px, 3vw, 31px);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+.as-intro p {
+  max-width: 38ch;
+  color: var(--muted);
+  font-size: 14.5px;
+  line-height: 1.6;
+}
+
+/* Turns: what the student asked sits in a tinted pill, the answer is plain
+   text — the same restraint the rest of the app reads with. */
+.as-ask {
+  justify-self: end;
+  max-width: 82%;
+  padding: 11px 16px;
+  border: 1px solid rgba(139, 123, 255, 0.32);
+  border-radius: 20px 20px 7px 20px;
+  background: linear-gradient(
+    125deg,
+    rgba(125, 107, 255, 0.24),
+    rgba(67, 197, 232, 0.1)
+  );
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  color: var(--ink);
+  font-size: 15px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.as-reply {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+/* Answers are read, not skimmed: hold the line length near 66 characters so
+   the eye finds the next line, and let paragraphs breathe. */
+.as-rich {
+  display: grid;
+  gap: 15px;
+  color: var(--ink);
+  font-size: 15.5px;
+  line-height: 1.68;
+  overflow-wrap: anywhere;
+}
+.as-rich .as-head,
+.as-rich strong {
+  color: #fff;
+  font-weight: 600;
+}
+/* A section label belongs to what follows it, so sit it closer to that. */
+.as-rich .as-head {
+  margin-top: 5px;
+  margin-bottom: -5px;
+}
+.as-rich .as-head:first-child {
+  margin-top: 0;
+}
+.as-rich code {
+  padding: 1px 6px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: rgba(0, 0, 0, 0.35);
+  font-size: 0.88em;
+}
+/* Markers sit in their own column so wrapped lines stay flush with the text
+   above them, and both list kinds share one left edge. */
+.as-list {
+  display: grid;
+  gap: 9px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: as-item;
+}
+.as-list > li {
+  position: relative;
+  padding-left: 24px;
+  counter-increment: as-item;
+}
+.as-list > li::before {
+  position: absolute;
+  left: 0;
+  color: var(--faint);
+}
+.as-list.is-bullet > li::before {
+  content: "";
+  top: 0.66em;
+  width: 4px;
+  height: 4px;
+  margin-left: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.as-list.is-ordered > li::before {
+  content: counter(as-item) ".";
+  width: 16px;
+  font-size: 13.5px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.as-path {
+  color: var(--sky);
+  text-decoration: none;
+  text-underline-offset: 3px;
+}
+.as-path:hover {
+  text-decoration: underline;
+}
+.as-pending,
+.as-failed {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 14px;
+}
+.as-failed {
+  color: var(--danger);
+}
+
+/* Tool calls: one quiet line per lookup, opening onto what it found. */
+.as-tool-wrap {
+  display: grid;
+}
+.as-tool {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-self: start;
+  max-width: 100%;
+  min-height: 26px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13.5px;
+  text-align: left;
+}
+button.as-tool {
+  cursor: pointer;
+}
+.as-tool-label {
+  color: var(--ink);
+  font-weight: 500;
+}
+.as-tool-wrap.tone-good .as-tool-label {
+  color: var(--teal);
+}
+.as-tool-wrap.tone-danger .as-tool-label {
+  color: var(--danger);
+}
+.as-tool-sum {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--faint);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.as-tool-chev {
+  flex: none;
+  color: var(--faint);
+  transition: transform 0.25s var(--ease);
+}
+.as-tool.is-open-true .as-tool-chev {
+  transform: rotate(180deg);
+}
+button.as-tool:hover .as-tool-chev {
+  color: var(--muted);
+}
+.as-tool-rows {
+  overflow: hidden;
+}
+.as-tool-rows > div {
+  display: grid;
+  margin-top: 8px;
+  padding: 5px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: rgba(0, 0, 0, 0.3);
+}
+.as-tool-row {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 33px;
+  padding: 0 9px;
+  border-radius: 11px;
+  font-size: 13.5px;
+}
+.as-tool-row .icon {
+  color: var(--faint);
+}
+.as-row-label {
+  overflow: hidden;
+  color: var(--ink);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.as-row-detail {
+  color: var(--faint);
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+.as-tool-link {
+  justify-self: start;
+  padding: 6px 9px 2px;
+  color: var(--sky);
+  font-size: 12.5px;
+  text-decoration: none;
+}
+.as-tool-link:hover {
+  text-decoration: underline;
+}
+
+.as-shimmer {
+  background: linear-gradient(
+    100deg,
+    var(--faint) 32%,
+    #fff 50%,
+    var(--faint) 68%
+  );
+  background-clip: text;
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: as-shimmer 1.9s linear infinite;
+}
+@keyframes as-shimmer {
+  from {
+    background-position: 170% 0;
+  }
+  to {
+    background-position: -70% 0;
+  }
+}
+.as-spin {
+  flex: none;
+  color: var(--indigo);
+  animation: as-spin 0.9s linear infinite;
+}
+@keyframes as-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Composer */
+.as-foot {
+  display: grid;
+  gap: 10px;
+  padding: 8px clamp(14px, 2vw, 22px) 14px;
+}
+.as-openers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+  max-width: var(--as-col);
+  margin: 0 auto;
+}
+.as-opener {
+  min-height: 34px;
+  padding: 0 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--muted);
+  font-size: 13.5px;
+  cursor: pointer;
+  transition:
+    color 0.2s,
+    background 0.2s,
+    border-color 0.2s;
+}
+.as-opener:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.26);
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--ink);
+}
+.as-opener:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.as-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 6px;
+  width: 100%;
+  max-width: var(--as-col);
+  margin: 0 auto;
+  padding: 6px 6px 6px 4px;
+  border: 1px solid var(--line-strong);
+  border-radius: 22px;
+  background: rgba(4, 5, 13, 0.62);
+  transition:
+    border-color 0.25s,
+    box-shadow 0.25s;
+}
+.as-bar:focus-within {
+  border-color: rgba(139, 123, 255, 0.45);
+  box-shadow: 0 0 0 4px rgba(139, 123, 255, 0.12);
+}
+.as-input {
+  min-height: 44px;
+  font-size: 15.5px;
+  resize: none;
+}
+/* The bar owns the focus state. Without this the shared field ring draws a
+   second, square-cornered glow inside the rounded composer. */
+.as-bar .as-input:focus-within {
+  border-color: transparent;
+  box-shadow: none;
+}
+.as-input .smooth-native,
+.as-input .smooth-mirror {
+  padding: 11px 12px;
+}
+.as-input .smooth-native {
+  max-height: 168px;
+}
+.as-send {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: var(--grad-btn);
+  background-origin: border-box;
+  box-shadow:
+    0 8px 22px -10px rgba(110, 100, 255, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  color: #fff;
+  cursor: pointer;
+  transition:
+    transform 0.25s var(--ease),
+    background 0.25s;
+}
+.as-send:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+.as-send:disabled {
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: none;
+  color: var(--faint);
+  cursor: not-allowed;
+}
+.as-send.is-stop {
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+  color: var(--ink);
+}
+.as-stop-mark {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  background: currentColor;
+}
+.as-fine {
+  max-width: var(--as-col);
+  margin: 0 auto;
+  color: var(--faint);
+  font-size: 12px;
+  text-align: center;
+}
+
+/* On phones the chat takes what's left of the screen under the top bar, so
+   the composer sits above the tab bar instead of below the fold. */
+@media (max-width: 960px) {
+  .as,
+  .as.is-empty {
+    min-height: 0;
+    height: max(420px, calc(100dvh - 60px - 76px - 28px));
+    border-radius: 22px;
+  }
+  .as-ask {
+    max-width: 92%;
+  }
+  .as-intro {
+    gap: 12px;
+    padding: 0;
+  }
+  .as-orb {
+    width: 46px;
+    height: 46px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .as-orb,
+  .as-spin {
+    animation: none;
+  }
+  .as-shimmer {
+    background: none;
+    color: var(--muted);
+    -webkit-text-fill-color: currentColor;
+    animation: none;
+  }
+}

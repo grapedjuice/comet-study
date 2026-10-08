@@ -10,6 +10,7 @@ import { Icon, type IconName } from "./icons";
 const NAV: { href: string; label: string; icon: IconName; mobile?: boolean }[] =
   [
     { href: "/dashboard", label: "Home", icon: "home", mobile: true },
+    { href: "/assistant", label: "Assistant", icon: "assistant" },
     { href: "/calendar", label: "Calendar", icon: "calendar", mobile: true },
     { href: "/groups", label: "Groups", icon: "groups", mobile: true },
     { href: "/match", label: "Find matches", icon: "match" },

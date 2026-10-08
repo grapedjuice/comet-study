@@ -8,6 +8,7 @@ Live at https://cometstudy.tech
 
 Signed-in students land on `/dashboard` (the landing page is for guests). The app shell links to:
 
+- **Assistant** (`/assistant`, and an Assistant tab in each group): Claude with read access to exactly what the signed-in student can see — their groups, courses, sessions, exam dates, free rooms and shared library. It can rank the times a group could actually meet (from members' saved free hours minus their classes, avoiding what's already booked), suggest a free campus room for each, and schedule the session once the student picks one. It reads text, Markdown, CSV, PDF and image files from the library to answer from the group's own notes. Needs `ANTHROPIC_API_KEY`; without it the page says so.
 - **Home** (`/dashboard`): the next session with RSVP, a "needs you" list (invites, join requests, RSVPs, exam confirmations, courses without a group), the next 7 days, rooms free right now, groups, courses, exams and recent library uploads.
 - **Calendar** (`/calendar`): week and month views of class meetings (from section schedules), group sessions and exams; `.ics` export.
 - **Groups** (`/groups`, `/groups/new`, `/groups/[id]`): join, request, invite, approve; each group has Overview, Sessions, Library, Exams, Members and Settings.
@@ -16,7 +17,7 @@ Signed-in students land on `/dashboard` (the landing page is for guests). The ap
 - **Library** (`/library`): files (4 MB, magic-byte checked, stored in Postgres) and links shared inside groups; only active members can download.
 - **Courses** and **Profile** (`/courses`, `/profile`): courses, name, study style, goals and a weekly availability grid.
 
-Mutations are Server Actions in `app/(app)/actions.ts`; domain logic lives in `lib/`.
+Mutations are Server Actions in `app/(app)/actions.ts`; domain logic lives in `lib/`. The assistant is the exception: it streams from `app/api/v1/assistant/chat/route.ts`, and its tools call the same `lib/` functions the pages do, so membership checks and limits apply unchanged. Conversations are not stored.
 
 ## Architecture and contributing
 
@@ -41,7 +42,7 @@ npm run db:dev   # persistent embedded PostgreSQL in .data/, migrates, wires .en
 npm run dev
 ```
 
-With `DATA_MODE=live` and a `NEBULA_API_KEY`, course search and sections use the UTD catalog from Nebula Labs; `npm run catalog:sync` refreshes the cached catalog (it also syncs on first search). New accounts go through `/welcome` (name → courses) before the personalized home page.
+Set `ANTHROPIC_API_KEY` to turn the study assistant on. With `DATA_MODE=live` and a `NEBULA_API_KEY`, course search and sections use the UTD catalog from Nebula Labs; `npm run catalog:sync` refreshes the cached catalog (it also syncs on first search). New accounts go through `/welcome` (name → courses) before the personalized home page.
 
 `db:dev` sets `EMAIL_PROVIDER=console`, so the one-time sign-in link is printed in the dev server console (`[comet-study] sign-in link for …`). Open it to land on `/account`. `npm run db:dev -- stop` stops the cluster. For real email set `EMAIL_PROVIDER=resend` (or `sendgrid`) with its API key and `EMAIL_FROM`.
 

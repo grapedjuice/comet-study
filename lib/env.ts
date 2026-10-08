@@ -21,6 +21,8 @@ const schema = z.object({
     .enum(["disabled", "console", "resend", "sendgrid"])
     .default("disabled"),
   NEBULA_API_KEY: z.string().optional(),
+  // Set to turn the study assistant on; without it the assistant page says so.
+  ANTHROPIC_API_KEY: z.string().optional(),
   RESEND_API_KEY: z.string().optional(),
   SENDGRID_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().optional(),

@@ -142,6 +142,9 @@ async function main() {
     NODE_ENV: suite === "integration" ? "test" : "production",
     DATA_MODE: "disabled",
     EMAIL_PROVIDER: "disabled",
+    // Renders the assistant's chat rather than its "not connected" notice, so
+    // the browser suites check the real page. No request is made with it.
+    ANTHROPIC_API_KEY: "test-key-never-sent",
     COMET_ISOLATED_TEST_DB: "1",
   };
   try {

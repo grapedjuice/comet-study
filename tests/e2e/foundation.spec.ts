@@ -239,6 +239,7 @@ test("signed-in app pages meet automated accessibility checks @a11y", async ({
   await page.emulateMedia({ reducedMotion: "reduce" });
   for (const path of [
     "/dashboard",
+    "/assistant",
     "/calendar",
     "/calendar?view=month",
     "/groups",
