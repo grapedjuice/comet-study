@@ -190,8 +190,12 @@ export const ASSISTANT_TOOLS: Anthropic.Tool[] = [
           description: "Limit to one group, or null for every group.",
         },
         kind: {
-          type: ["string", "null"],
-          enum: [...RESOURCE_KINDS.map((k) => k.id), null],
+          // The API rejects an enum on a ["string", "null"] type, so the null
+          // goes in its own branch.
+          anyOf: [
+            { type: "string", enum: RESOURCE_KINDS.map((k) => k.id) },
+            { type: "null" },
+          ],
           description: "Limit to one kind of resource, or null for all.",
         },
       },
