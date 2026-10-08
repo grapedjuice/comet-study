@@ -47,7 +47,7 @@ type Database = ReturnType<typeof createDatabaseClient>;
  * scheduling a session in a group they belong to. Every tool goes through the
  * same membership checks the pages do, so the model can't widen anyone's view.
  */
-export const ASSISTANT_MODEL = "claude-opus-5-5";
+export const ASSISTANT_MODEL = "claude-haiku-5-5";
 
 /** A chat reply is a few paragraphs at most; this is a ceiling, not a target. */
 export const ASSISTANT_MAX_TOKENS = 8000;

@@ -197,7 +197,7 @@ async function converse(
     const turn = client.messages.stream({
       model: ASSISTANT_MODEL,
       max_tokens: ASSISTANT_MAX_TOKENS,
-      // Thinking is always on for this model; a chat reply doesn't need the
+      // Thinking is on by default for this model; a chat reply doesn't need the
       // deepest pass, and lower effort keeps the first token quick.
       output_config: { effort: "low" },
       system,
