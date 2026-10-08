@@ -846,7 +846,7 @@ export default async function GroupPage({
                   ) : (
                     <p className="muted-note">
                       No other {group.courseCode} students are on Comet Study
-                      yet. Share comet-study.vercel.app with your class.
+                      yet. Share cometstudy.tech with your class.
                     </p>
                   )}
                 </Panel>

@@ -2,7 +2,7 @@
 
 A private, course-aware study companion for UT Dallas students. Independent student project; not an official university service.
 
-Live at https://comet-study.vercel.app
+Live at https://cometstudy.tech
 
 ## The signed-in app
 
