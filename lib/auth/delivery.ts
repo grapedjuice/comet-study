@@ -6,6 +6,9 @@ export function verificationLink(appUrl: string, token: string) {
   return `${appUrl}/verify#token=${encodeURIComponent(token)}`;
 }
 
+/** Inboxes show this instead of the bare address. */
+const SENDER_NAME = "Comet Study";
+
 function emailBody(link: string) {
   const text = `Your Comet Study sign-in link (valid for 10 minutes):\n\n${link}\n\nIf you didn't ask for this, you can ignore this email.`;
   const html = `<div style="font-family:system-ui,sans-serif;max-width:480px;margin:auto;padding:32px;color:#0b0d1a">
@@ -37,7 +40,7 @@ export function createDelivery(
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: env.EMAIL_FROM,
+          from: `${SENDER_NAME} <${env.EMAIL_FROM}>`,
           to: [email],
           subject,
           text,
@@ -53,7 +56,7 @@ export function createDelivery(
         },
         body: JSON.stringify({
           personalizations: [{ to: [{ email }] }],
-          from: { email: env.EMAIL_FROM },
+          from: { email: env.EMAIL_FROM, name: SENDER_NAME },
           subject,
           content: [
             { type: "text/plain", value: text },

@@ -49,10 +49,29 @@ describe("verification delivery", () => {
     expect(init.headers).toMatchObject({ Authorization: "Bearer re_test" });
     const body = JSON.parse(String(init.body));
     expect(body).toMatchObject({
-      from: "hello@study.example",
+      from: "Comet Study <hello@study.example>",
       to: ["student@utdallas.edu"],
     });
     expect(body.text).toContain("/verify#token=raw-token");
+  });
+
+  it("names the sender for SendGrid", async () => {
+    const fetchImpl = vi.fn(async () => new Response("", { status: 202 }));
+    const env = parseEnv({
+      ...base,
+      EMAIL_PROVIDER: "sendgrid",
+      SENDGRID_API_KEY: "sg_test",
+      EMAIL_FROM: "hello@study.example",
+    });
+    await createDelivery(env, fetchImpl as typeof fetch)(input);
+    const [, init] = fetchImpl.mock.calls[0] as unknown as [
+      string,
+      RequestInit,
+    ];
+    expect(JSON.parse(String(init.body)).from).toEqual({
+      email: "hello@study.example",
+      name: "Comet Study",
+    });
   });
 
   it("reports provider failures as unavailable", async () => {
