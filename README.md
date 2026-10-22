@@ -1,8 +1,12 @@
 # Comet Study
 
-A private, course-aware study companion for UT Dallas students. Independent student project; not an official university service.
+A private, course-aware study companion for UT Dallas students: find classmates in your courses, form study groups, schedule sessions around everyone's classes, share notes and ask a study assistant that knows your groups. Independent student project; not an official university service.
 
+**Live: [cometstudy.tech](https://cometstudy.tech)**
 
+## Signing in
+
+Sign-in is passwordless and limited to exact `@utdallas.edu` addresses. Enter your email on `/sign-in` and Comet Study emails you a one-time link (valid for 10 minutes, usable once). UTD's Outlook often swallows that email, so the sign-in page also shows the same link as an **Open sign-in link** button and you can continue right there. The button is on when `INSTANT_SIGNIN=on`. With it off, the link only goes by email.
 
 ## The signed-in app
 
@@ -56,7 +60,7 @@ Share the printed `*.trycloudflare.com` link. `next.config.ts` allows those orig
 
 ## Database and production-shaped startup
 
-Copy `.env.example` to the ignored `.env`, provide a PostgreSQL URL for a dedicated development database and a securely generated AUTH_SECRET of at least 32 characters. Set APP_URL to the exact local origin. Keep DATA_MODE and EMAIL_PROVIDER disabled until their adapters are implemented. No external API key is needed for the foundation. Never use a production database for tests or demos.
+Copy `.env.example` to the ignored `.env`, provide a PostgreSQL URL for a dedicated development database and a securely generated AUTH_SECRET of at least 32 characters. Set APP_URL to the exact local origin. `DATA_MODE` (`disabled`/`fixture`/`live`) and `EMAIL_PROVIDER` (`disabled`/`console`/`resend`/`sendgrid`) can stay `disabled` for a bare preview. Never use a production database for tests or demos.
 
 ```sh
 npm run env:check
@@ -66,7 +70,7 @@ npm run db:seed
 npm run build
 ```
 
-The foundation seed inserts only a fictional marker to verify migration/seed behavior. It does not yet create the required full-product demo dataset. Production startup requires NODE_ENV=production, an HTTPS APP_URL, and rejects fixture/console adapters. Use a TLS reverse proxy or hosting provider for real production serving.
+The seed inserts only a fictional marker to verify migration/seed behavior. Production startup requires NODE_ENV=production, an HTTPS APP_URL, and rejects fixture/console adapters. Use a TLS reverse proxy or hosting provider for real production serving.
 
 After configuring that HTTPS origin, `npm start` validates production settings and starts the built application. It rejects the local HTTP APP_URL in the development example. For a self-contained local production-build test, use `npm run test:e2e`; the test wrapper supplies isolated configuration automatically.
 

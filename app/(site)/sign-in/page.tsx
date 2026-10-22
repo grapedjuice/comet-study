@@ -14,6 +14,7 @@ export default function SignInPage() {
     "email",
   );
   const [devLink, setDevLink] = useState("");
+  const [emailed, setEmailed] = useState(false);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -35,6 +36,7 @@ export default function SignInPage() {
       setDevLink(
         typeof payload.data?.devLink === "string" ? payload.data.devLink : "",
       );
+      setEmailed(payload.data?.emailed === true);
       setStatus("sent");
       setMessage(
         mode === "instant"
@@ -89,6 +91,9 @@ export default function SignInPage() {
                 <p>
                   Signing in as <strong>{email}</strong>. The link works once
                   and expires in 10 minutes.
+                  {emailed
+                    ? " We also emailed it to you, but you can just use the button below."
+                    : ""}
                 </p>
               ) : (
                 <p>

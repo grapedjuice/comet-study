@@ -43,10 +43,13 @@ export async function POST(request: Request) {
   }
   // Hand the link back so the sign-in page can open it directly: always in
   // local console mode (parseEnv rejects that in production), and anywhere
-  // INSTANT_SIGNIN=on, which skips sending the email altogether.
+  // INSTANT_SIGNIN=on. Instant mode still emails the link when a provider is
+  // set, but some inboxes (UTD Outlook) swallow it, so the page link is what
+  // actually gets people in and a failed send doesn't block it.
   const instant = env.INSTANT_SIGNIN === "on";
   const consoleMode =
     env.EMAIL_PROVIDER === "console" && env.NODE_ENV !== "production";
+  const sendsEmail = env.EMAIL_PROVIDER !== "disabled" && !consoleMode;
   if (env.EMAIL_PROVIDER === "disabled" && !instant)
     return apiError(
       "EMAIL_UNAVAILABLE",
@@ -55,13 +58,22 @@ export async function POST(request: Request) {
     );
 
   let devLink: string | undefined;
+  let emailed = false;
   const deliver = createDelivery(env);
   try {
     const result = await requestVerification(
       getDatabase(env.DATABASE_URL),
       parsed.data.email,
       async (input) => {
-        if (!instant) await deliver(input);
+        if (!instant) {
+          await deliver(input);
+          emailed = sendsEmail;
+        } else if (sendsEmail) {
+          emailed = await deliver(input).then(
+            () => true,
+            () => false,
+          );
+        }
         if (instant || consoleMode)
           devLink = `/verify#token=${encodeURIComponent(input.token)}`;
       },
@@ -70,6 +82,7 @@ export async function POST(request: Request) {
     );
     return ok({
       delivery: instant ? "instant" : consoleMode ? "console" : "email",
+      emailed,
       expiresInSeconds: result.expiresInSeconds,
       ...(devLink ? { devLink } : {}),
     });
