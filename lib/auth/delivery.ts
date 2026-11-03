@@ -1,5 +1,8 @@
 import type { AppEnv } from "../env";
-import { WORDMARK_PNG_BASE64 } from "./email-wordmark";
+import {
+  WORDMARK_DARK_PNG_BASE64,
+  WORDMARK_LIGHT_PNG_BASE64,
+} from "./email-wordmark";
 import type { VerificationDelivery } from "./service";
 
 /** Inboxes show this instead of the bare address. */
@@ -13,9 +16,25 @@ const MONO = `'Geist Mono','SF Mono',Menlo,Consolas,'Courier New',monospace`;
 // Only the card is filled. Everything else is transparent so the mail app's
 // own background shows through; dark-mode clients repaint fills anyway.
 const CARD = "#11132b";
-/** The wordmark rides along as an inline attachment the HTML points at. */
-const WORDMARK_CID = "comet-wordmark";
-const WORDMARK_FILE = "comet-study.png";
+/**
+ * Both wordmarks ride along as inline attachments the HTML points at. The
+ * dark-text one shows by default; dark mode swaps in the light-text one
+ * where the client says so (Apple Mail and Outlook apps). Gmail never says,
+ * so it always shows the default.
+ */
+const WORDMARKS = [
+  {
+    cid: "comet-wordmark-light",
+    filename: "comet-study.png",
+    content: WORDMARK_LIGHT_PNG_BASE64,
+  },
+  {
+    cid: "comet-wordmark-dark",
+    filename: "comet-study-dark.png",
+    content: WORDMARK_DARK_PNG_BASE64,
+  },
+];
+const WORDMARK_IMG = `width="207" height="96" alt="Comet Study" style="display:block;border:0;width:207px;height:96px;font-family:${SANS};font-size:20px;font-weight:600"`;
 
 /** Table layout and inline styles: the only HTML Outlook and Gmail agree on. */
 export function emailBody(code: string) {
@@ -33,15 +52,23 @@ Didn't ask for this? Someone may have typed your email by mistake. You can ignor
   const html = `<!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark">
+<meta name="color-scheme" content="light dark"><meta name="supported-color-schemes" content="light dark">
 <title>Your Comet Study sign-in code</title>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@600&family=Instrument+Serif:ital@1&display=swap" rel="stylesheet">
+<style>
+@media (prefers-color-scheme: dark) {
+  .wm-light { display: none !important; }
+  .wm-dark { display: block !important; max-height: none !important; overflow: visible !important; }
+}
+[data-ogsc] .wm-light { display: none !important; }
+[data-ogsc] .wm-dark { display: block !important; max-height: none !important; overflow: visible !important; }
+</style>
 </head>
 <body style="margin:0;padding:0">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0">Expires in 10 minutes and works once. Didn't ask? You can ignore it.&#8203;&nbsp;&#8203;&nbsp;&#8203;&nbsp;&#8203;&nbsp;&#8203;&nbsp;&#8203;&nbsp;&#8203;&nbsp;&#8203;&nbsp;</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" style="padding:16px 16px 32px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:440px">
-<tr><td align="center" style="padding:0 0 4px"><img src="cid:${WORDMARK_CID}" width="207" height="96" alt="Comet Study" style="display:block;border:0;width:207px;height:96px;color:#f4f4fb;font-family:${SANS};font-size:20px;font-weight:600"></td></tr>
+<tr><td align="center" style="padding:0 0 4px"><img class="wm-light" src="cid:comet-wordmark-light" ${WORDMARK_IMG}><!--[if !mso]><!--><div class="wm-dark" style="display:none;max-height:0;overflow:hidden"><img src="cid:comet-wordmark-dark" ${WORDMARK_IMG}></div><!--<![endif]--></td></tr>
 <tr><td style="background-color:${CARD};border:1px solid #262a52;border-radius:20px;padding:30px 24px">
 <p style="margin:0 0 10px;color:#7cc8ff;font-family:${SANS};font-size:11px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase">Sign-in code</p>
 <p style="margin:0 0 8px;color:#f4f4fb;font-family:${SANS};font-size:26px;font-weight:600;letter-spacing:-0.02em;line-height:1.2">Here's your <em style="font-family:${SERIF};font-size:1.15em;font-weight:400;font-style:italic;color:#a99dff;letter-spacing:0">code.</em></p>
@@ -82,14 +109,12 @@ export function createDelivery(
           subject,
           text,
           html,
-          attachments: [
-            {
-              filename: WORDMARK_FILE,
-              content: WORDMARK_PNG_BASE64,
-              content_type: "image/png",
-              content_id: WORDMARK_CID,
-            },
-          ],
+          attachments: WORDMARKS.map(({ cid, filename, content }) => ({
+            filename,
+            content,
+            content_type: "image/png",
+            content_id: cid,
+          })),
         }),
       });
     } else if (env.EMAIL_PROVIDER === "sendgrid") {
@@ -107,15 +132,13 @@ export function createDelivery(
             { type: "text/plain", value: text },
             { type: "text/html", value: html },
           ],
-          attachments: [
-            {
-              filename: WORDMARK_FILE,
-              content: WORDMARK_PNG_BASE64,
-              type: "image/png",
-              disposition: "inline",
-              content_id: WORDMARK_CID,
-            },
-          ],
+          attachments: WORDMARKS.map(({ cid, filename, content }) => ({
+            filename,
+            content,
+            type: "image/png",
+            disposition: "inline",
+            content_id: cid,
+          })),
         }),
       });
     } else {

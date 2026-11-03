@@ -49,7 +49,11 @@ describe("verification delivery", () => {
     expect(body.subject).toContain("K7Q2MX");
     expect(body.attachments).toEqual([
       expect.objectContaining({
-        content_id: "comet-wordmark",
+        content_id: "comet-wordmark-light",
+        content_type: "image/png",
+      }),
+      expect.objectContaining({
+        content_id: "comet-wordmark-dark",
         content_type: "image/png",
       }),
     ]);
@@ -57,7 +61,10 @@ describe("verification delivery", () => {
 
   it("shows the inline wordmark and one tile per code character", () => {
     const { html } = emailBody("K7Q2MX");
-    expect(html).toContain('src="cid:comet-wordmark"');
+    // Light-mode logo by default, dark-mode one hidden until a client asks.
+    expect(html).toContain('class="wm-light" src="cid:comet-wordmark-light"');
+    expect(html).toContain('src="cid:comet-wordmark-dark"');
+    expect(html).toContain("@media (prefers-color-scheme: dark)");
     expect(html).toContain('alt="Comet Study"');
     expect(html.match(/<td style="padding:0 3px">/g)).toHaveLength(6);
     expect(html).not.toContain("Nobody gets in");
