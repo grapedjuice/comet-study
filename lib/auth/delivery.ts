@@ -52,9 +52,9 @@ Didn't ask for this? Someone may have typed your email by mistake. You can ignor
 </head>
 <body class="cs-page" style="margin:0;padding:0;${fill(PAGE)}">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:${PAGE}">Expires in 10 minutes and works once. Didn't ask? You can ignore it.&#8203;&nbsp;&#8203;&nbsp;&#8203;&nbsp;&#8203;&nbsp;&#8203;&nbsp;&#8203;&nbsp;&#8203;&nbsp;&#8203;&nbsp;</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="cs-page" style="${fill(PAGE)}"><tr><td align="center" class="cs-page" style="padding:32px 16px;${fill(PAGE)}">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="cs-page" style="${fill(PAGE)}"><tr><td align="center" class="cs-page" style="padding:16px 16px 32px;${fill(PAGE)}">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:440px">
-<tr><td align="center" style="padding:0 0 20px"><img src="cid:${WORDMARK_CID}" width="175" height="64" alt="Comet Study" style="display:block;border:0;width:175px;height:64px;color:#f4f4fb;font-family:${SANS};font-size:20px;font-weight:600"></td></tr>
+<tr><td align="center" style="padding:0 0 4px"><img src="cid:${WORDMARK_CID}" width="207" height="96" alt="Comet Study" style="display:block;border:0;width:207px;height:96px;color:#f4f4fb;font-family:${SANS};font-size:20px;font-weight:600"></td></tr>
 <tr><td class="cs-card" style="${fill(CARD)};border:1px solid #262a52;border-radius:20px;padding:30px 24px">
 <p style="margin:0 0 10px;color:#7cc8ff;font-family:${SANS};font-size:11px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase">Sign-in code</p>
 <p style="margin:0 0 8px;color:#f4f4fb;font-family:${SANS};font-size:26px;font-weight:600;letter-spacing:-0.02em;line-height:1.2">Here's your <em style="font-family:${SERIF};font-size:1.15em;font-weight:400;font-style:italic;color:#a99dff;letter-spacing:0">code.</em></p>
