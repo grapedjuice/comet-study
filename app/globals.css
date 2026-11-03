@@ -1891,6 +1891,44 @@ a.eyebrow-pill {
 .auth-footnote strong {
   color: var(--muted);
 }
+.auth-hint {
+  margin-top: 14px;
+  padding: 12px 16px;
+  border: 1px solid rgba(250, 204, 21, 0.28);
+  border-radius: 14px;
+  background: rgba(250, 204, 21, 0.07);
+  color: var(--muted);
+  font-size: 14px;
+}
+.auth-hint strong {
+  color: var(--ink);
+}
+.auth-form .code-input {
+  /* Monospace + wide tracking inflates the input's intrinsic width past the card. */
+  width: 100%;
+  min-width: 0;
+  font-family: ui-monospace, monospace;
+  font-size: 24px;
+  letter-spacing: 0.4em;
+}
+.auth-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-top: 22px;
+}
+.auth-actions button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--sky);
+  cursor: pointer;
+  font-size: 14px;
+}
+.auth-actions button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
 .sent-state {
   display: grid;
   justify-items: start;

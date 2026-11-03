@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { apiError, isSameOrigin, ok, readJson } from "../../../../../lib/api";
-import { redeemVerificationToken } from "../../../../../lib/auth/repository";
+import { normalizeCode } from "../../../../../lib/auth/policy";
+import { redeemVerificationCode } from "../../../../../lib/auth/repository";
 import { SESSION_COOKIE } from "../../../../../lib/auth/session";
 import { getDatabase } from "../../../../../lib/db";
 import { parseEnv } from "../../../../../lib/env";
@@ -8,7 +9,14 @@ import { parseEnv } from "../../../../../lib/env";
 export const runtime = "nodejs";
 
 const bodySchema = z
-  .object({ token: z.string().trim().min(1).max(512) })
+  .object({
+    email: z.string().trim().email(),
+    // People type codes in lowercase or paste them with spaces.
+    code: z
+      .string()
+      .transform(normalizeCode)
+      .pipe(z.string().regex(/^[A-Z0-9]{6}$/)),
+  })
   .strict();
 
 export async function POST(request: Request) {
@@ -19,18 +27,19 @@ export async function POST(request: Request) {
     return apiError("INVALID_JSON", "Request body must be valid JSON", 422);
   const parsed = bodySchema.safeParse(body);
   if (!parsed.success)
-    return apiError("INVALID_REQUEST", "Enter a valid verification token", 422);
+    return apiError("INVALID_REQUEST", "Enter the 6-character code", 422);
 
   try {
     const env = parseEnv({ ...process.env });
-    const result = await redeemVerificationToken(
+    const result = await redeemVerificationCode(
       getDatabase(env.DATABASE_URL),
-      parsed.data.token,
+      parsed.data.email,
+      parsed.data.code,
     );
     if (!result)
       return apiError(
-        "INVALID_TOKEN",
-        "This verification link is invalid or expired",
+        "INVALID_CODE",
+        "That code is wrong or expired. Check it, or request a new one.",
         422,
       );
     const response = ok({

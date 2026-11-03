@@ -57,7 +57,7 @@ test("landing provides real navigation and accurately describes preview access",
   await page.getByRole("link", { name: "Find my study group" }).click();
   await expect(page).toHaveURL(/\/sign-in$/);
   await page.getByLabel("UT Dallas email").fill("student@example.com");
-  await page.getByRole("button", { name: "Get my sign-in link" }).click();
+  await page.getByRole("button", { name: "Email me a code" }).click();
   await expect(page.getByRole("status")).toHaveText(
     "Use an eligible university email address",
   );
@@ -106,22 +106,11 @@ test("health endpoints reflect running application and migrated database", async
   expect(ready.headers()["cache-control"]).toContain("no-store");
 });
 
-test("signed-out visitors are routed to sign-in and bad links explain themselves", async ({
-  page,
-  request,
-}) => {
+test("signed-out visitors are routed to sign-in", async ({ page, request }) => {
   const session = await request.get("/api/v1/auth/session");
   expect(await session.json()).toEqual({ data: { user: null } });
   await page.goto("/account");
   await expect(page).toHaveURL(/\/sign-in$/);
-  await page.goto("/verify#token=not-a-real-token");
-  await expect(
-    page.getByRole("heading", { name: "That link didn’t work." }),
-  ).toBeVisible();
-  await expect(page).toHaveURL(/\/verify$/);
-  await expect(
-    page.getByRole("link", { name: /Request a new link/ }),
-  ).toBeVisible();
 });
 
 test("onboarding and course APIs require a signed-in student", async ({
@@ -274,19 +263,14 @@ test("the catalog cron refuses callers without the secret", async ({
   expect((await request.get("/api/v1/cron/catalog")).status()).toBe(401);
 });
 
-test("sign-in links wait for a click so mail scanners can't spend them", async ({
-  page,
-}) => {
-  const posts: string[] = [];
-  page.on("request", (r) => r.method() === "POST" && posts.push(r.url()));
-  await page.goto(`/verify#token=${"a".repeat(43)}`);
-  const button = page.getByRole("button", { name: /Continue to Comet Study/ });
-  await expect(button).toBeVisible();
-  await expect(page).toHaveURL(/\/verify$/);
-  expect(posts).toEqual([]);
-  await button.click();
-  await expect(
-    page.getByRole("heading", { name: "That link didn’t work." }),
-  ).toBeVisible();
-  expect(posts.some((u) => u.endsWith("/api/v1/auth/verify-email"))).toBe(true);
+test("a wrong or malformed sign-in code is rejected", async ({ request }) => {
+  const wrong = await request.post("/api/v1/auth/verify-email", {
+    data: { email: "nobody@utdallas.edu", code: "123456" },
+  });
+  expect(wrong.status()).toBe(422);
+  expect(await wrong.json()).toMatchObject({ error: { code: "INVALID_CODE" } });
+  const malformed = await request.post("/api/v1/auth/verify-email", {
+    data: { email: "nobody@utdallas.edu", code: "12!" },
+  });
+  expect(malformed.status()).toBe(422);
 });

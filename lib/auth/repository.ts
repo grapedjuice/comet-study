@@ -1,8 +1,9 @@
 import { randomUUID } from "node:crypto";
 import type { createDatabaseClient } from "../db";
 import {
-  hashToken,
+  codeDigest,
   isEligibleUtdEmail,
+  issueCode,
   issueToken,
   normalizeEmail,
 } from "./policy";
@@ -10,6 +11,8 @@ import {
 type Database = ReturnType<typeof createDatabaseClient>;
 
 export const MAX_LIVE_TOKENS = 3;
+/** Wrong guesses one code survives before it stops working. */
+export const MAX_CODE_ATTEMPTS = 5;
 /** Sign-in emails one network may trigger per hour, across all addresses. */
 export const MAX_REQUESTS_PER_REQUESTER_HOUR = 10;
 
@@ -21,12 +24,15 @@ export async function createVerificationToken(
 ) {
   const email = normalizeEmail(emailInput);
   if (!isEligibleUtdEmail(email)) throw new Error("ELIGIBLE_EMAIL_REQUIRED");
-  const token = issueToken();
+  const code = issueCode();
+  const rowId = randomUUID();
   const expiresAt = new Date(now.getTime() + 10 * 60 * 1000);
   const client = await db.pool.connect();
   try {
     await client.query("begin");
-    // Serialize requests per address, then cap live links to limit inbox spam.
+    // Serialize requests per address, then cap live codes to limit inbox spam.
+    // Codes burned by wrong guesses still count until they expire, which also
+    // caps how many guesses one address can take.
     await client.query("select pg_advisory_xact_lock(hashtext($1))", [email]);
     const live = await client.query<{ count: string }>(
       "select count(*) from verification_tokens where identifier = $1 and used_at is null and expires_at > $2",
@@ -57,17 +63,17 @@ export async function createVerificationToken(
     await client.query(
       "insert into verification_tokens (id, user_id, identifier, token_hash, expires_at, requester_hash, created_at) values ($1, $2, $3, $4, $5, $6, $7)",
       [
-        randomUUID(),
+        rowId,
         userId,
         email,
-        token.digest,
+        codeDigest(rowId, code),
         expiresAt,
         requesterHash,
         now,
       ],
     );
     await client.query("commit");
-    return { rawToken: token.raw, tokenHash: token.digest, email, expiresAt };
+    return { code, email, expiresAt };
   } catch (error) {
     await client.query("rollback");
     throw error;
@@ -76,27 +82,42 @@ export async function createVerificationToken(
   }
 }
 
-export async function redeemVerificationToken(
+export async function redeemVerificationCode(
   db: Database,
-  rawToken: string,
+  emailInput: string,
+  code: string,
   now = new Date(),
 ) {
-  const tokenHash = hashToken(rawToken);
+  const email = normalizeEmail(emailInput);
   const client = await db.pool.connect();
   try {
     await client.query("begin");
-    const found = await client.query<{ id: string; user_id: string }>(
-      "select id, user_id from verification_tokens where token_hash = $1 and used_at is null and expires_at > $2 for update",
-      [tokenHash, now],
+    // Same lock as issuing, so concurrent guesses are counted one at a time.
+    await client.query("select pg_advisory_xact_lock(hashtext($1))", [email]);
+    const live = await client.query<{
+      id: string;
+      user_id: string;
+      token_hash: string;
+    }>(
+      "select id, user_id, token_hash from verification_tokens where identifier = $1 and used_at is null and expires_at > $2 and attempts < $3 for update",
+      [email, now, MAX_CODE_ATTEMPTS],
     );
-    const row = found.rows[0];
+    const row = live.rows.find(
+      (candidate) => candidate.token_hash === codeDigest(candidate.id, code),
+    );
     if (!row) {
-      await client.query("rollback");
+      // A wrong guess counts against every live code for the address.
+      await client.query(
+        "update verification_tokens set attempts = attempts + 1 where identifier = $1 and used_at is null and expires_at > $2",
+        [email, now],
+      );
+      await client.query("commit");
       return null;
     }
+    // Signing in spends this code and any others still waiting in the inbox.
     await client.query(
-      "update verification_tokens set used_at = $1 where id = $2 and used_at is null",
-      [now, row.id],
+      "update verification_tokens set used_at = $1 where identifier = $2 and used_at is null",
+      [now, email],
     );
     await client.query(
       "update users set email_verified_at = coalesce(email_verified_at, $1), last_active_at = $1, updated_at = $1 where id = $2",

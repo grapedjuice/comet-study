@@ -52,6 +52,8 @@ export const verificationTokens = pgTable("verification_tokens", {
   tokenHash: text("token_hash").notNull().unique(),
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   usedAt: timestamp("used_at", { withTimezone: true }),
+  // Wrong codes entered against this row; it stops working at the limit.
+  attempts: integer("attempts").notNull().default(0),
   // Keyed hash of the requesting IP, for per-network send limits.
   requesterHash: text("requester_hash"),
   createdAt: timestamp("created_at", { withTimezone: true })

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { createDelivery, verificationLink } from "../../lib/auth/delivery";
+import { createDelivery } from "../../lib/auth/delivery";
 import { parseEnv } from "../../lib/env";
 
 const base = {
@@ -9,26 +9,18 @@ const base = {
 };
 const input = {
   email: "student@utdallas.edu",
-  token: "raw-token",
+  code: "K7Q2MX",
   expiresAt: new Date("2026-09-23T12:10:00.000Z"),
 };
 
 describe("verification delivery", () => {
-  it("keeps the token in the URL fragment", () => {
-    expect(verificationLink("https://study.example", "a/b+c")).toBe(
-      "https://study.example/verify#token=a%2Fb%2Bc",
-    );
-  });
-
-  it("prints the link for the console provider outside production", async () => {
+  it("prints the code for the console provider outside production", async () => {
     const info = vi.spyOn(console, "info").mockImplementation(() => {});
     const fetchImpl = vi.fn();
     const env = parseEnv({ ...base, EMAIL_PROVIDER: "console" });
     await createDelivery(env, fetchImpl)(input);
     expect(fetchImpl).not.toHaveBeenCalled();
-    expect(info).toHaveBeenCalledWith(
-      expect.stringContaining("/verify#token=raw-token"),
-    );
+    expect(info).toHaveBeenCalledWith(expect.stringContaining("K7Q2MX"));
     info.mockRestore();
   });
 
@@ -52,7 +44,9 @@ describe("verification delivery", () => {
       from: "Comet Study <hello@study.example>",
       to: ["student@utdallas.edu"],
     });
-    expect(body.text).toContain("/verify#token=raw-token");
+    expect(body.text).toContain("K7Q2MX");
+    expect(body.text).not.toContain("http");
+    expect(body.subject).toContain("K7Q2MX");
   });
 
   it("names the sender for SendGrid", async () => {

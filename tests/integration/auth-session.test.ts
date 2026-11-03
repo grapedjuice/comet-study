@@ -3,7 +3,7 @@ import {
   createVerificationToken,
   MAX_LIVE_TOKENS,
   MAX_REQUESTS_PER_REQUESTER_HOUR,
-  redeemVerificationToken,
+  redeemVerificationCode,
 } from "../../lib/auth/repository";
 import { findSessionUser, revokeSession } from "../../lib/auth/session";
 import { createDatabaseClient, runMigrations } from "../../lib/db";
@@ -25,9 +25,10 @@ describe("sessions", () => {
       "Session.User@UTDallas.edu",
       issued,
     );
-    const redeemed = await redeemVerificationToken(
+    const redeemed = await redeemVerificationCode(
       db,
-      created.rawToken,
+      created.email,
+      created.code,
       new Date("2026-09-23T12:01:00.000Z"),
     );
     expect(redeemed).not.toBeNull();
@@ -48,9 +49,10 @@ describe("sessions", () => {
       "expiring@utdallas.edu",
       new Date("2026-09-23T12:00:00.000Z"),
     );
-    const redeemed = await redeemVerificationToken(
+    const redeemed = await redeemVerificationCode(
       db,
-      created.rawToken,
+      created.email,
+      created.code,
       new Date("2026-09-23T12:01:00.000Z"),
     );
     expect(

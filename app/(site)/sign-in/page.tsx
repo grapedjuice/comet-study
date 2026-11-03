@@ -1,52 +1,66 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 import { BlurText, FadeUp } from "../../ui/motion";
 
-export default function SignInPage() {
-  const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "sent" | "error">(
-    "idle",
-  );
-  const [message, setMessage] = useState("");
-  const [delivery, setDelivery] = useState<"email" | "console" | "instant">(
-    "email",
-  );
-  const [devLink, setDevLink] = useState("");
-  const [emailed, setEmailed] = useState(false);
+async function post(path: string, body: object) {
+  const response = await fetch(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const payload = await response.json();
+  if (!response.ok)
+    throw new Error(payload.error?.message ?? "Something went wrong.");
+  return payload.data;
+}
 
-  async function submit(event: FormEvent<HTMLFormElement>) {
+export default function SignInPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
+  const [step, setStep] = useState<"email" | "code" | "done">("email");
+  const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [message, setMessage] = useState("");
+  const [delivery, setDelivery] = useState<"email" | "console">("email");
+
+  async function requestCode(event?: FormEvent<HTMLFormElement>) {
+    event?.preventDefault();
+    setStatus("loading");
+    setMessage("");
+    try {
+      const data = await post("/api/v1/auth/request-verification", { email });
+      setDelivery(data?.delivery === "console" ? "console" : "email");
+      setCode("");
+      setStep("code");
+      setStatus("idle");
+    } catch (error) {
+      setStatus("error");
+      setMessage(
+        error instanceof Error ? error.message : "We couldn't send your code.",
+      );
+    }
+  }
+
+  async function verifyCode(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setStatus("loading");
     setMessage("");
     try {
-      const response = await fetch("/api/v1/auth/request-verification", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      const payload = await response.json();
-      if (!response.ok)
-        throw new Error(
-          payload.error?.message ?? "We couldn't send your link.",
-        );
-      const mode = payload.data?.delivery;
-      setDelivery(mode === "console" || mode === "instant" ? mode : "email");
-      setDevLink(
-        typeof payload.data?.devLink === "string" ? payload.data.devLink : "",
-      );
-      setEmailed(payload.data?.emailed === true);
-      setStatus("sent");
-      setMessage(
-        mode === "instant"
-          ? "Your sign-in link is ready."
-          : "Check your university inbox for a sign-in link.",
+      const data = await post("/api/v1/auth/verify-email", { email, code });
+      setStep("done");
+      setStatus("idle");
+      const needsOnboarding = data?.onboardingRequired !== false;
+      setTimeout(
+        () => router.replace(needsOnboarding ? "/welcome" : "/dashboard"),
+        900,
       );
     } catch (error) {
       setStatus("error");
       setMessage(
-        error instanceof Error ? error.message : "We couldn't send your link.",
+        error instanceof Error ? error.message : "We couldn't check that code.",
       );
     }
   }
@@ -79,62 +93,101 @@ export default function SignInPage() {
           </Link>
           <p className="eyebrow">Sign in</p>
           <h1>Find your people.</h1>
-          {status === "sent" ? (
+          {step === "done" ? (
             <div className="sent-state">
               <span className="sent-orb" aria-hidden="true">
                 ✓
               </span>
               <p className="form-message sent" role="status">
-                {message}
+                You’re in. Setting up your study table…
               </p>
-              {delivery === "instant" ? (
-                <p>
-                  Signing in as <strong>{email}</strong>. The link works once
-                  and expires in 10 minutes.
-                  {emailed
-                    ? " We also emailed it to you, but you can just use the button below."
-                    : ""}
-                </p>
-              ) : (
-                <p>
-                  We sent a one-time link to <strong>{email}</strong>. It works
-                  once and expires in 10 minutes.
-                  {delivery === "console"
-                    ? " (Local dev: the link is also printed in the server console.)"
-                    : ""}
-                </p>
-              )}
-              {delivery === "email" ? (
-                <p className="sent-hint">
-                  Don’t see it within a minute? Check your <strong>Junk</strong>{" "}
-                  or <strong>Spam</strong> folder, and mark it “Not junk” so
-                  future links land in your inbox.
-                </p>
-              ) : null}
-              {devLink ? (
-                <a className="button primary" href={devLink}>
-                  Open sign-in link <span aria-hidden="true">→</span>
-                </a>
-              ) : null}
-              <button
-                type="button"
-                onClick={() => {
-                  setStatus("idle");
-                  setMessage("");
-                }}
-              >
-                Use a different email
-              </button>
             </div>
+          ) : step === "code" ? (
+            <>
+              <p className="auth-lede">
+                We emailed a 6-character code to <strong>{email}</strong>. It
+                works once and expires in 10 minutes.
+                {delivery === "console"
+                  ? " (Local dev: the code is printed in the server console.)"
+                  : ""}
+              </p>
+              {delivery === "email" ? (
+                <p className="auth-hint">
+                  Don’t see it within a minute? Check your <strong>Junk</strong>{" "}
+                  or <strong>Spam</strong> folder.
+                </p>
+              ) : null}
+              <form
+                className="auth-form"
+                onSubmit={verifyCode}
+                aria-busy={status === "loading"}
+              >
+                <label htmlFor="code">Sign-in code</label>
+                <input
+                  id="code"
+                  name="code"
+                  className="code-input"
+                  autoComplete="one-time-code"
+                  autoCapitalize="characters"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  pattern="[A-Za-z0-9]{6}"
+                  maxLength={6}
+                  placeholder="••••••"
+                  value={code}
+                  onChange={(event) =>
+                    setCode(
+                      event.target.value
+                        .replace(/[^A-Za-z0-9]/g, "")
+                        .toUpperCase()
+                        .slice(0, 6),
+                    )
+                  }
+                  autoFocus
+                  required
+                />
+                <button
+                  className="button primary"
+                  type="submit"
+                  disabled={status === "loading" || code.length !== 6}
+                >
+                  {status === "loading" ? "Checking…" : "Sign in"}
+                </button>
+                {message ? (
+                  <p className={`form-message ${status}`} role="status">
+                    {message}
+                  </p>
+                ) : null}
+              </form>
+              <p className="auth-actions">
+                <button
+                  type="button"
+                  onClick={() => requestCode()}
+                  disabled={status === "loading"}
+                >
+                  Send a new code
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStep("email");
+                    setStatus("idle");
+                    setMessage("");
+                  }}
+                >
+                  Use a different email
+                </button>
+              </p>
+            </>
           ) : (
             <>
               <p className="auth-lede">
-                Sign in with your UT Dallas email to get a one-time link — no
-                password needed.
+                Sign in with your UT Dallas email and we’ll send you a
+                6-character code — no password needed.
               </p>
               <form
                 className="auth-form"
-                onSubmit={submit}
+                onSubmit={requestCode}
                 aria-busy={status === "loading"}
               >
                 <label htmlFor="email">UT Dallas email</label>
@@ -154,8 +207,8 @@ export default function SignInPage() {
                   disabled={status === "loading"}
                 >
                   {status === "loading"
-                    ? "Getting your link…"
-                    : "Get my sign-in link"}
+                    ? "Sending your code…"
+                    : "Email me a code"}
                 </button>
                 {message ? (
                   <p className={`form-message ${status}`} role="status">

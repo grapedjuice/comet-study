@@ -41,59 +41,34 @@ export async function POST(request: Request) {
       503,
     );
   }
-  // Hand the link back so the sign-in page can open it directly: always in
-  // local console mode (parseEnv rejects that in production), and anywhere
-  // INSTANT_SIGNIN=on. Instant mode still emails the link when a provider is
-  // set, but some inboxes (UTD Outlook) swallow it, so the page link is what
-  // actually gets people in and a failed send doesn't block it.
-  const instant = env.INSTANT_SIGNIN === "on";
-  const consoleMode =
-    env.EMAIL_PROVIDER === "console" && env.NODE_ENV !== "production";
-  const sendsEmail = env.EMAIL_PROVIDER !== "disabled" && !consoleMode;
-  if (env.EMAIL_PROVIDER === "disabled" && !instant)
+  if (env.EMAIL_PROVIDER === "disabled")
     return apiError(
       "EMAIL_UNAVAILABLE",
       "Student sign-in is not available in this preview",
       503,
     );
 
-  let devLink: string | undefined;
-  let emailed = false;
-  const deliver = createDelivery(env);
   try {
     const result = await requestVerification(
       getDatabase(env.DATABASE_URL),
       parsed.data.email,
-      async (input) => {
-        if (!instant) {
-          await deliver(input);
-          emailed = sendsEmail;
-        } else if (sendsEmail) {
-          emailed = await deliver(input).then(
-            () => true,
-            () => false,
-          );
-        }
-        if (instant || consoleMode)
-          devLink = `/verify#token=${encodeURIComponent(input.token)}`;
-      },
+      createDelivery(env),
       new Date(),
       requesterHash(request, env.AUTH_SECRET),
     );
     return ok({
-      delivery: instant ? "instant" : consoleMode ? "console" : "email",
-      emailed,
+      delivery:
+        env.EMAIL_PROVIDER === "console" && env.NODE_ENV !== "production"
+          ? "console"
+          : "email",
       expiresInSeconds: result.expiresInSeconds,
-      ...(devLink ? { devLink } : {}),
     });
   } catch (error) {
     const code = error instanceof Error ? error.message : "";
     if (code === "RATE_LIMITED")
       return apiError(
         "RATE_LIMITED",
-        instant
-          ? "Too many sign-in links were requested. Try again later."
-          : "Too many sign-in links were requested. Check your inbox or try again later.",
+        "Too many sign-in codes were requested. Check your inbox or try again later.",
         429,
       );
     if (code === "EMAIL_UNAVAILABLE")

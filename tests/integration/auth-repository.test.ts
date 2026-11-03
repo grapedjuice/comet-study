@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { afterAll, beforeAll } from "vitest";
 import {
+  MAX_CODE_ATTEMPTS,
   createVerificationToken,
-  redeemVerificationToken,
+  redeemVerificationCode,
 } from "../../lib/auth/repository";
 import { createDatabaseClient, runMigrations } from "../../lib/db";
 
@@ -22,15 +23,17 @@ describe("verification token persistence", () => {
       "student@utdallas.edu",
       new Date("2026-09-23T12:00:00.000Z"),
     );
-    expect(created.rawToken).not.toBe(created.tokenHash);
-    const first = await redeemVerificationToken(
+    expect(created.code).toMatch(/^[2-9A-HJKMNP-Z]{6}$/);
+    const first = await redeemVerificationCode(
       db,
-      created.rawToken,
+      created.email,
+      created.code,
       new Date("2026-09-23T12:01:00.000Z"),
     );
-    const second = await redeemVerificationToken(
+    const second = await redeemVerificationCode(
       db,
-      created.rawToken,
+      created.email,
+      created.code,
       new Date("2026-09-23T12:02:00.000Z"),
     );
     expect(first).not.toBeNull();
@@ -45,9 +48,10 @@ describe("verification token persistence", () => {
       new Date("2026-09-23T12:00:00.000Z"),
     );
     expect(
-      await redeemVerificationToken(
+      await redeemVerificationCode(
         db,
-        created.rawToken,
+        created.email,
+        created.code,
         new Date("2026-09-23T12:11:00.000Z"),
       ),
     ).toBeNull();
@@ -60,18 +64,58 @@ describe("verification token persistence", () => {
       new Date("2026-09-23T12:00:00.000Z"),
     );
     const results = await Promise.all([
-      redeemVerificationToken(
+      redeemVerificationCode(
         db,
-        created.rawToken,
+        created.email,
+        created.code,
         new Date("2026-09-23T12:01:00.000Z"),
       ),
-      redeemVerificationToken(
+      redeemVerificationCode(
         db,
-        created.rawToken,
+        created.email,
+        created.code,
         new Date("2026-09-23T12:01:00.000Z"),
       ),
     ]);
     expect(results.filter(Boolean)).toHaveLength(1);
     expect(results.filter((result) => result === null)).toHaveLength(1);
+  });
+
+  it("stops accepting a code after too many wrong guesses", async () => {
+    const at = new Date("2026-09-23T12:01:00.000Z");
+    const created = await createVerificationToken(
+      db,
+      "guesser@utdallas.edu",
+      new Date("2026-09-23T12:00:00.000Z"),
+    );
+    // Never issued: 0 is not in the code alphabet.
+    const wrong = "000000";
+    for (let i = 0; i < MAX_CODE_ATTEMPTS; i++)
+      expect(
+        await redeemVerificationCode(db, created.email, wrong, at),
+      ).toBeNull();
+    expect(
+      await redeemVerificationCode(db, created.email, created.code, at),
+    ).toBeNull();
+  });
+
+  it("only accepts a code for the address it was sent to", async () => {
+    const at = new Date("2026-09-23T12:01:00.000Z");
+    const created = await createVerificationToken(
+      db,
+      "owner@utdallas.edu",
+      new Date("2026-09-23T12:00:00.000Z"),
+    );
+    expect(
+      await redeemVerificationCode(
+        db,
+        "intruder@utdallas.edu",
+        created.code,
+        at,
+      ),
+    ).toBeNull();
+    expect(
+      await redeemVerificationCode(db, created.email, created.code, at),
+    ).not.toBeNull();
   });
 });

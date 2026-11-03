@@ -16,12 +16,17 @@
                 "type": "object",
                 "additionalProperties": false,
                 "required": [
-                  "token"
+                  "email",
+                  "code"
                 ],
                 "properties": {
-                  "token": {
+                  "email": {
                     "type": "string",
-                    "minLength": 1
+                    "format": "email"
+                  },
+                  "code": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9]{6}$"
                   }
                 }
               }
@@ -36,7 +41,7 @@
             "description": "Cross-site request rejected"
           },
           "422": {
-            "description": "Malformed, expired, or already used token"
+            "description": "Malformed, wrong, expired, or already used code"
           },
           "503": {
             "description": "Database unavailable"
@@ -78,7 +83,7 @@
             "description": "Malformed or ineligible email"
           },
           "429": {
-            "description": "Too many live links for this address"
+            "description": "Too many live codes for this address"
           },
           "503": {
             "description": "Email or database unavailable"

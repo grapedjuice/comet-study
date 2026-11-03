@@ -6,7 +6,7 @@ A private, course-aware study companion for UT Dallas students: find classmates 
 
 ## Signing in
 
-Sign-in is passwordless and limited to exact `@utdallas.edu` addresses. Enter your email on `/sign-in` and Comet Study emails you a one-time link (valid for 10 minutes, usable once). UTD's Outlook often swallows that email, so the sign-in page also shows the same link as an **Open sign-in link** button and you can continue right there. The button is on when `INSTANT_SIGNIN=on`. With it off, the link only goes by email.
+Sign-in is passwordless and limited to exact `@utdallas.edu` addresses. Enter your email on `/sign-in` and Comet Study emails you a 6-character code of letters and digits (valid for 10 minutes, usable once), which you type in on the same page. Five wrong guesses retire a code.
 
 ## The signed-in app
 
@@ -48,7 +48,7 @@ npm run dev
 
 Set `ANTHROPIC_API_KEY` to turn the study assistant on. With `DATA_MODE=live` and a `NEBULA_API_KEY`, course search and sections use the UTD catalog from Nebula Labs; `npm run catalog:sync` refreshes the cached catalog (it also syncs on first search). New accounts go through `/welcome` (name → courses) before the personalized home page.
 
-`db:dev` sets `EMAIL_PROVIDER=console`, so the one-time sign-in link is printed in the dev server console (`[comet-study] sign-in link for …`). Open it to land on `/account`. `npm run db:dev -- stop` stops the cluster. For real email set `EMAIL_PROVIDER=resend` (or `sendgrid`) with its API key and `EMAIL_FROM`.
+`db:dev` sets `EMAIL_PROVIDER=console`, so the sign-in code is printed in the dev server console (`[comet-study] sign-in code for …`). Type it on `/sign-in`. `npm run db:dev -- stop` stops the cluster. For real email set `EMAIL_PROVIDER=resend` (or `sendgrid`) with its API key and `EMAIL_FROM`.
 
 ### Previewing on other devices
 

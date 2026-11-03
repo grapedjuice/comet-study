@@ -5,7 +5,7 @@ import { isEligibleUtdEmail, normalizeEmail } from "./policy";
 type Database = ReturnType<typeof createDatabaseClient>;
 export type VerificationDelivery = (input: {
   email: string;
-  token: string;
+  code: string;
   expiresAt: Date;
 }) => Promise<void>;
 
@@ -22,7 +22,7 @@ export async function requestVerification(
   const created = await createVerificationToken(db, email, now, requesterHash);
   await deliver({
     email,
-    token: created.rawToken,
+    code: created.code,
     expiresAt: created.expiresAt,
   });
   return { email, expiresInSeconds: 600 };

@@ -43,6 +43,13 @@
       "when": 1790383782147,
       "tag": "0005_campus_exams",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793738606116,
+      "tag": "0006_signin_codes",
+      "breakpoints": true
     }
   ]
 }

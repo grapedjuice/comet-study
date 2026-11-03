@@ -1,20 +1,19 @@
 import type { AppEnv } from "../env";
 import type { VerificationDelivery } from "./service";
 
-/** The token travels in the fragment so it never reaches server access logs. */
-export function verificationLink(appUrl: string, token: string) {
-  return `${appUrl}/verify#token=${encodeURIComponent(token)}`;
-}
-
 /** Inboxes show this instead of the bare address. */
 const SENDER_NAME = "Comet Study";
 
-function emailBody(link: string) {
-  const text = `Your Comet Study sign-in link (valid for 10 minutes):\n\n${link}\n\nIf you didn't ask for this, you can ignore this email.`;
+function emailBody(code: string) {
+  const text = `Your Comet Study sign-in code is ${code}
+
+Type it on the sign-in page. It works once and expires in 10 minutes.
+
+If you didn't ask for this, you can ignore this email.`;
   const html = `<div style="font-family:system-ui,sans-serif;max-width:480px;margin:auto;padding:32px;color:#0b0d1a">
 <h1 style="font-size:22px;margin:0 0 12px">Your seat at the study table</h1>
-<p style="color:#4a4f6a;line-height:1.5">Tap below to sign in to Comet Study. The link works once and expires in 10 minutes.</p>
-<p style="margin:28px 0"><a href="${link}" style="background:#6d5dfc;color:#fff;padding:12px 20px;border-radius:999px;text-decoration:none;font-weight:600">Sign in to Comet Study</a></p>
+<p style="color:#4a4f6a;line-height:1.5">Type this code on the Comet Study sign-in page. It works once and expires in 10 minutes.</p>
+<p style="margin:28px 0;font-size:34px;font-weight:700;letter-spacing:0.3em;font-family:ui-monospace,monospace">${code}</p>
 <p style="color:#8a8fa8;font-size:13px">If you didn't ask for this, you can ignore this email.</p></div>`;
   return { text, html };
 }
@@ -23,12 +22,11 @@ export function createDelivery(
   env: AppEnv,
   fetchImpl: typeof fetch = fetch,
 ): VerificationDelivery {
-  return async ({ email, token }) => {
-    const link = verificationLink(env.APP_URL, token);
-    const subject = "Your Comet Study sign-in link";
-    const { text, html } = emailBody(link);
+  return async ({ email, code }) => {
+    const subject = `${code} is your Comet Study sign-in code`;
+    const { text, html } = emailBody(code);
     if (env.EMAIL_PROVIDER === "console" && env.NODE_ENV !== "production") {
-      console.info(`[comet-study] sign-in link for ${email}: ${link}`);
+      console.info(`[comet-study] sign-in code for ${email}: ${code}`);
       return;
     }
     let response: Response;

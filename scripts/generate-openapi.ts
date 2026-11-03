@@ -21,8 +21,11 @@ const document = {
               schema: {
                 type: "object",
                 additionalProperties: false,
-                required: ["token"],
-                properties: { token: { type: "string", minLength: 1 } },
+                required: ["email", "code"],
+                properties: {
+                  email: { type: "string", format: "email" },
+                  code: { type: "string", pattern: "^[A-Za-z0-9]{6}$" },
+                },
               },
             },
           },
@@ -30,7 +33,9 @@ const document = {
         responses: {
           "200": { description: "Email verified and session cookie issued" },
           "403": { description: "Cross-site request rejected" },
-          "422": { description: "Malformed, expired, or already used token" },
+          "422": {
+            description: "Malformed, wrong, expired, or already used code",
+          },
           "503": { description: "Database unavailable" },
         },
       },
@@ -55,7 +60,7 @@ const document = {
           "200": { description: "Verification delivery queued" },
           "403": { description: "Cross-site request rejected" },
           "422": { description: "Malformed or ineligible email" },
-          "429": { description: "Too many live links for this address" },
+          "429": { description: "Too many live codes for this address" },
           "503": { description: "Email or database unavailable" },
         },
       },
