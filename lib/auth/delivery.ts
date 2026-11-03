@@ -11,6 +11,16 @@ const SANS = `Geist,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica
 const SERIF = `'Instrument Serif',Georgia,'Times New Roman',serif`;
 const MONO = `'Geist Mono','SF Mono',Menlo,Consolas,'Courier New',monospace`;
 const PAGE = "#07081a";
+const CARD = "#11132b";
+const TILE = "#1b1e40";
+
+/**
+ * Outlook's dark mode repaints background colors but leaves background
+ * images alone, so each dark fill is also a one-color gradient.
+ */
+function fill(color: string) {
+  return `background-color:${color};background-image:linear-gradient(${color},${color})`;
+}
 /** The wordmark rides along as an inline attachment the HTML points at. */
 const WORDMARK_CID = "comet-wordmark";
 const WORDMARK_FILE = "comet-study.png";
@@ -25,7 +35,7 @@ Didn't ask for this? Someone may have typed your email by mistake. You can ignor
   const tiles = [...code]
     .map(
       (char) =>
-        `<td style="padding:0 3px"><div style="width:42px;height:54px;line-height:54px;border-radius:12px;background:#1b1e40;border:1px solid #363b75;color:#ffffff;font-family:${MONO};font-size:26px;font-weight:600;text-align:center">${char}</div></td>`,
+        `<td style="padding:0 3px"><div class="cs-tile" style="width:42px;height:54px;line-height:54px;border-radius:12px;${fill(TILE)};border:1px solid #363b75;color:#ffffff;font-family:${MONO};font-size:26px;font-weight:600;text-align:center">${char}</div></td>`,
     )
     .join("");
   const html = `<!doctype html>
@@ -34,13 +44,18 @@ Didn't ask for this? Someone may have typed your email by mistake. You can ignor
 <meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark">
 <title>Your Comet Study sign-in code</title>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@600&family=Instrument+Serif:ital@1&display=swap" rel="stylesheet">
+<style>
+[data-ogsb] .cs-page{background-color:${PAGE}!important}
+[data-ogsb] .cs-card{background-color:${CARD}!important}
+[data-ogsb] .cs-tile{background-color:${TILE}!important}
+</style>
 </head>
-<body style="margin:0;padding:0;background:${PAGE}">
+<body class="cs-page" style="margin:0;padding:0;${fill(PAGE)}">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:${PAGE}">Expires in 10 minutes and works once. Didn't ask? You can ignore it.&#8203;&nbsp;&#8203;&nbsp;&#8203;&nbsp;&#8203;&nbsp;&#8203;&nbsp;&#8203;&nbsp;&#8203;&nbsp;&#8203;&nbsp;</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${PAGE}"><tr><td align="center" style="padding:32px 16px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="cs-page" style="${fill(PAGE)}"><tr><td align="center" class="cs-page" style="padding:32px 16px;${fill(PAGE)}">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:440px">
 <tr><td align="center" style="padding:0 0 20px"><img src="cid:${WORDMARK_CID}" width="175" height="64" alt="Comet Study" style="display:block;border:0;width:175px;height:64px;color:#f4f4fb;font-family:${SANS};font-size:20px;font-weight:600"></td></tr>
-<tr><td style="background:#11132b;border:1px solid #262a52;border-radius:20px;padding:30px 24px">
+<tr><td class="cs-card" style="${fill(CARD)};border:1px solid #262a52;border-radius:20px;padding:30px 24px">
 <p style="margin:0 0 10px;color:#7cc8ff;font-family:${SANS};font-size:11px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase">Sign-in code</p>
 <p style="margin:0 0 8px;color:#f4f4fb;font-family:${SANS};font-size:26px;font-weight:600;letter-spacing:-0.02em;line-height:1.2">Here's your <em style="font-family:${SERIF};font-size:1.15em;font-weight:400;font-style:italic;color:#a99dff;letter-spacing:0">code.</em></p>
 <p style="margin:0 0 24px;color:#a4a8c6;font-family:${SANS};font-size:15px;line-height:1.55">Enter it on the Comet Study sign-in page to pick up where you left off.</p>
