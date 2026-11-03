@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { createDelivery } from "../../lib/auth/delivery";
+import { createDelivery, emailBody } from "../../lib/auth/delivery";
 import { parseEnv } from "../../lib/env";
 
 const base = {
@@ -47,6 +47,20 @@ describe("verification delivery", () => {
     expect(body.text).toContain("K7Q2MX");
     expect(body.text).not.toContain("http");
     expect(body.subject).toContain("K7Q2MX");
+    expect(body.attachments).toEqual([
+      expect.objectContaining({
+        content_id: "comet-wordmark",
+        content_type: "image/png",
+      }),
+    ]);
+  });
+
+  it("shows the inline wordmark and one tile per code character", () => {
+    const { html } = emailBody("K7Q2MX");
+    expect(html).toContain('src="cid:comet-wordmark"');
+    expect(html).toContain('alt="Comet Study"');
+    expect(html.match(/<td style="padding:0 3px">/g)).toHaveLength(6);
+    expect(html).not.toContain("Nobody gets in");
   });
 
   it("names the sender for SendGrid", async () => {
